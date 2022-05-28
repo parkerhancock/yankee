@@ -1,5 +1,5 @@
 from .deserializer import Deserializer
-from sugar.util import is_valid
+from gelatin_extract.util import is_valid
 
 class Schema(Deserializer):
     class Meta():

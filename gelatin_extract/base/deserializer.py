@@ -1,4 +1,4 @@
-from sugar.util import underscore, camelize
+from gelatin_extract.util import underscore, camelize
 import logging
 
 def do_nothing(obj):

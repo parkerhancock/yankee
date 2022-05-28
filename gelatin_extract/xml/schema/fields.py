@@ -1,6 +1,6 @@
 from .key import XmlMixin
 
-from sugar.base import fields
+from gelatin_extract.base import fields
 
 class Field(XmlMixin, fields.Field):
     pass

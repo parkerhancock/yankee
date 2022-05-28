@@ -14,8 +14,8 @@ There are two main modules: `sugar.json.schema` and `sugar.xml.schema`. Those mo
 ### JSON Deserializer Example
 
 ```python
-    from sugar.json.schema import Schema
-    from sugar.json.schema import fields
+    from gelatin_extract.json.schema import Schema
+    from gelatin_extract.json.schema import fields
 
     class JsonExample(Schema):
         name = fields.String()

@@ -1,5 +1,5 @@
 from .key import XmlMixin
-from sugar.base import schema
+from gelatin_extract.base import schema
 
 class Schema(XmlMixin, schema.Schema):
     pass

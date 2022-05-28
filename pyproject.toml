@@ -5,7 +5,12 @@ description = "lightweigh, simple, and fast declarative XML and JSON deserializa
 authors = ["Parker Hancock <633163+parkerhancock@users.noreply.github.com>"]
 license = "Apache Software License 2.0"
 readme = "README.md"
-homepage = "https://github.com/parkerhancock/gelatin_extract"
+repository = "https://github.com/parkerhancock/gelatin_extract"
+keywords = ["deserialization", "xml", "json", "deserialize"]
+classifiers =[
+    "Development Status :: 3 - Alpha",
+    "Topic :: Text Processing :: Markup :: XML"
+]
 
 [tool.poetry.dependencies]
 python = "^3.9"

@@ -1,5 +1,5 @@
 from .key import JsonMixin
-from sugar.base import schema
+from gelatin_extract.base import schema
 
 class Schema(JsonMixin, schema.Schema):
     pass

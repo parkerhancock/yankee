@@ -1,6 +1,6 @@
 from .key import JsonMixin
 
-from sugar.base import fields
+from gelatin_extract.base import fields
 
 class Field(JsonMixin, fields.Field):
     pass
