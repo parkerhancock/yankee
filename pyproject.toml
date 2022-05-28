@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "gelatin_extract"
-version = "0.1.1"
+version = "0.1.2"
 description = "lightweigh, simple, and fast declarative XML and JSON deserialization"
 authors = ["Parker Hancock <633163+parkerhancock@users.noreply.github.com>"]
 license = "Apache Software License 2.0"

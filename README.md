@@ -9,7 +9,7 @@ I have another package called patent_client. I also do a lot with legal data, so
 
 ## Quick Start
 
-There are two main modules: `sugar.json.schema` and `sugar.xml.schema`. Those modules support defining class-style deserializers. Both start by subclassing a `Schema` class, and then defining attributes from the `fields` submodule.
+There are two main modules: `gelatin_extract.json.schema` and `gelatin_extract.xml.schema`. Those modules support defining class-style deserializers. Both start by subclassing a `Schema` class, and then defining attributes from the `fields` submodule.
 
 ### JSON Deserializer Example
 
