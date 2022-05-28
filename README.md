@@ -1,7 +1,7 @@
-# Sugar
+# Gelatin Extract
 
 This is kind of like Marshmallow, but only does deserialization. What it lacks in reversibility, it makes up for in speed. Schemas are compiled in advance allowing
-deserialization to occur very quickly
+deserialization to occur very quickly.
 
 ## Motivation
 
