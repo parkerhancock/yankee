@@ -20,7 +20,9 @@ doc = {
         "part1": "George",
         "part2": "Burdell"
     },
-    "random": "Some data"
+    "random": "Some data",
+    "first_name": ['Peter', 'Parker'],
+    "age": [15, 21],
 }
 
 class Name(Combine):
@@ -30,16 +32,21 @@ class Name(Combine):
     def combine_func(self, obj):
         return f"{obj['part1']} {obj['part2']}"
 
+class Person(Zip):
+    first_name = Str()
+    age = Int()
+
 class ExampleSchema(Schema):
     string = Str()
     date_time = DT()
     date = Date()
-    booleans = List(Bool, key="booleans")
+    booleans = List(Bool, data_key="booleans")
     float = Float()
     int = Int()
     exists = Exists()
     does_not_exist = Exists()
     name = Name()
+    people = Person(None)
 
 def test_fields():
     data = ExampleSchema().deserialize(doc)
@@ -52,3 +59,4 @@ def test_fields():
     assert data['exists'] == True
     assert data['doesNotExist'] == False
     assert data['name'] == "George Burdell"
+    assert data['people'][0] == {"first_name": "Peter", "age": 15}

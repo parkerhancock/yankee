@@ -38,6 +38,9 @@ class Combine(JsonMixin, fields.Combine):
 class Alternative(JsonMixin, fields.Alternative):
     pass
 
+class Zip(JsonMixin, fields.Zip):
+    _list_field = List
+
 #Aliases
 Str = String
 DT = DateTime

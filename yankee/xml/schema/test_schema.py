@@ -37,7 +37,7 @@ class ExampleSchema(Schema):
     string = Str("./string")
     date_time = DT("./date_time")
     date = Date("./date")
-    booleans = List(Bool, key="./booleans/bool")
+    booleans = List(Bool, "./booleans/bool")
     float = Float("./float")
     int = Int("./int")
     exists = Exists("./exists")

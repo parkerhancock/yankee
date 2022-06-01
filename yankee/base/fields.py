@@ -10,8 +10,8 @@ from .deserializer import Deserializer
 from .schema import Schema
 
 class Field(Deserializer):
-    def __init__(self, key=None, required=False, many=False):
-        super().__init__(key)
+    def __init__(self, data_key=None, required=False, many=False):
+        super().__init__(data_key=data_key, required=required)
         self.required = required
 
     def deserialize(self, obj):
@@ -21,8 +21,8 @@ class Field(Deserializer):
         return result
     
 class String(Field):
-    def __init__(self, key=None, required=False, attr=None, formatter=None):
-        super().__init__(key, required)
+    def __init__(self, data_key=None, required=False, attr=None, formatter=None):
+        super().__init__(data_key, required)
         self.formatter = formatter or clean_whitespace
 
     def deserialize(self, elem) -> "Optional[str]":
@@ -36,8 +36,8 @@ class String(Field):
         return str(elem)
 
 class DateTime(String):
-    def __init__(self, key=None, required=False, attr=None, formatter=None, dt_format=None):
-        super().__init__(key, required, attr, formatter)
+    def __init__(self, data_key=None, required=False, attr=None, formatter=None, dt_format=None):
+        super().__init__(data_key, required, attr, formatter)
         if dt_format:
             self.parse_date = lambda s: datetime.datetime.strftime(s, dt_format)
         else:
@@ -123,8 +123,8 @@ class Const(Field):
 class List(Field):
     many = True
 
-    def __init__(self, item_schema, *args, formatter=lambda l: l, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, item_schema, data_key=None, formatter=lambda l: l, **kwargs):
+        super().__init__(data_key=data_key, **kwargs)
         self.formatter = formatter
         self.item_schema = item_schema
         if callable(self.item_schema):
@@ -168,3 +168,36 @@ class Alternative(Schema):
     def deserialize(self, et_elem):
         obj = super().deserialize(et_elem)
         return next((v for v in obj.values() if is_valid(v)), None)
+
+class Zip(Schema):
+    _list_field = List
+    """Sometimes data is provided as a bunch of arrays, like:
+    {
+        "name": ["Peter", "Parker"],
+        "age": [15, 25],
+    }
+    and we want to build out complete records from this data.
+    This field performs that step:
+    """
+
+    def bind(self, name=None, parent=None):
+        super().bind(name, parent)
+        list_fields = dict()
+        for k, v in self.fields.items():
+            key = v.data_key
+            v.data_key = None
+            list_field = self._list_field(v, key)
+            list_field.bind(k, self)
+            list_fields[k] = list_field
+        self.fields = list_fields
+
+    def lists_to_records(self, obj):
+        keys = tuple(obj.keys())
+        values = tuple(obj.values())
+        return [dict(zip(keys, v)) for v in zip(*values)]
+    
+    def deserialize(self, raw_obj) -> "Dict":
+        obj = {k: v.accessor(raw_obj) for k, v in self.fields.items()}
+        return self.lists_to_records(obj)
+
+
