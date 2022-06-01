@@ -1,6 +1,6 @@
 from .key import JsonMixin
 
-from gelatin_extract.base import fields
+from yankee.base import fields
 
 class Field(JsonMixin, fields.Field):
     pass

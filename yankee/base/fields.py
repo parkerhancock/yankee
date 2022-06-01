@@ -5,7 +5,7 @@ import datetime
 from dateutil.parser import parse as parse_date
 from dateutil.parser._parser import ParserError
 
-from gelatin_extract.util import clean_whitespace, is_valid
+from yankee.util import clean_whitespace, is_valid
 from .deserializer import Deserializer
 from .schema import Schema
 

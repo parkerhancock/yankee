@@ -1,4 +1,4 @@
-from gelatin_extract.util import camelize
+from yankee.util import camelize
 
 def do_nothing(obj):
     return obj
