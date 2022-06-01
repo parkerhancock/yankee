@@ -1,7 +1,7 @@
-# Gelatin Extract
+# Yankee - Simple Declarative Data Extraction from XML and JSON
 
 This is kind of like Marshmallow, but only does deserialization. What it lacks in reversibility, it makes up for in speed. Schemas are compiled in advance allowing
-deserialization to occur very quickly.
+data extraction to occur very quickly.
 
 ## Motivation
 
@@ -9,13 +9,13 @@ I have another package called patent_client. I also do a lot with legal data, so
 
 ## Quick Start
 
-There are two main modules: `gelatin_extract.json.schema` and `gelatin_extract.xml.schema`. Those modules support defining class-style deserializers. Both start by subclassing a `Schema` class, and then defining attributes from the `fields` submodule.
+There are two main modules: `yankee.json.schema` and `yankee.xml.schema`. Those modules support defining class-style deserializers. Both start by subclassing a `Schema` class, and then defining attributes from the `fields` submodule.
 
 ### JSON Deserializer Example
 
 ```python
-    from gelatin_extract.json.schema import Schema
-    from gelatin_extract.json.schema import fields
+    from yankee.json.schema import Schema
+    from yankee.json.schema import fields
 
     class JsonExample(Schema):
         name = fields.String()
@@ -52,8 +52,8 @@ can be used to pluck an item from the JSON object.
 
 ```python
     import lxml.etree as ET
-    from sugar.xml.schema import Schema
-    from sugar.xml.schema import fields
+    from yankee.xml.schema import Schema
+    from yankee.xml.schema import fields
 
     class XmlExample(Schema):
         name = fields.String("./name")
