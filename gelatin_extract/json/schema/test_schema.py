@@ -44,11 +44,11 @@ class ExampleSchema(Schema):
 def test_fields():
     data = ExampleSchema().deserialize(doc)
     assert data['string'] == "Some String Data"
-    assert data['date_time'] == datetime.datetime(2021, 5, 4, 12, 5)
+    assert data['dateTime'] == datetime.datetime(2021, 5, 4, 12, 5)
     assert data['date'] == datetime.date(2021, 5, 4)
     assert data['booleans'] == [True, True, False, False]
     assert data['float'] - 1.234 < 0.001
     assert data['int'] == 23
     assert data['exists'] == True
-    assert data['does_not_exist'] == False
+    assert data['doesNotExist'] == False
     assert data['name'] == "George Burdell"

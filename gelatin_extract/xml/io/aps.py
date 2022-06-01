@@ -1,59 +1,49 @@
-from dataclasses import dataclass
+import io
+from ...io.iterparse import file_iterparse
 
-@dataclass
-class KV():
-    key: str
-    value: str
-
-    @classmethod
-    def from_line(cls, line):
-        return cls(line[:5].strip(), line[5:].rstrip())
-
-def process_chunk(chunk, record_tag):
-    """Take a chunk that represents a record
-    and returns an XML document"""
-    doc = [f"<{record_tag}>",]
-    last_line, chunk = chunk[0], chunk[1:]
-    section = None
-    for kv in chunk:
-        if not kv.key: # line continuation
-            if last_line.key == "TBL": # Preserve newlines on tables
-                last_line.value += "\n" + kv.value
+def aps_record_to_xml(text):
+    if isinstance(text, str):
+        buf = io.StringIO(text)
+    else:
+        buf = io.TextIOWrapper(io.BytesIO(text))
+    record_tag = buf.readline().strip()
+    output = list()
+    output.append(f"<{record_tag}>")
+    section_tag = None
+    item_tag = None
+    for line in buf.readlines():
+        key = line[:5].strip(); value = line[5:].strip()
+        if key and not value: # New Section
+            if item_tag:
+                output.append(f"</{item_tag}>")
+                item_tag = None
+            if section_tag:
+                output.append(f"</{section_tag}>")
+            output.append(f"<{key}>")
+            section_tag = key
+        elif value and not key:
+            if item_tag == "TBL":
+                output.append(f"{value}\n")
             else:
-                last_line.value += kv.value
-            continue
-        
-        if not last_line.value: # New Section
-            if section:
-                doc.append(f"</{section}>")
-            doc.append(f"<{last_line.key}>")
-            section = last_line.key
+                output.append(value)
         else:
-            doc.append(f"{'\t' if section else ''}<{last_line.key}>{last_line.value}</{last_line.key}>")
-        last_line = kv
-    doc.append(f"<{last_line.key}>{last_line.value}</{last_line.key}>")
-    if section:
-        doc.append(f"</{section}>")
-    doc.append(f"</{record_tag}>")
-    return "\n".join(doc).replace("&", "&amp;")
+            # New Item
+            if item_tag:
+                output.append(f"</{item_tag}>")
+            output.append(f"<{key}>")
+            item_tag = key
+            if item_tag == "TBL":
+                output.append(f"{value}\n")
+            else:
+                output.append(value)
+    if item_tag:
+        output.append(f"</{item_tag}>")
+    if section_tag:
+        output.append(f"</{section_tag}>")
+    output.append(f"</{record_tag}>")
+    return "".join(output).encode()
 
 
-def aps_to_xml(file: "io.RawBytesIO", record_tag: "str") -> "str":
-    """APS Iterator
-    Will yield back XML-formatted documents for each
-    record that begins with record_tag
-    """
-    chunk = list()
-    recording = False
-    for line in file:
-        if not recording and record_tag not in line:
-            continue
-        if record_tag in line:
-            recording = True
-        kv = KV.from_line(line)
-        if kv.key == record_tag and chunk:
-            yield process_chunk(chunk, record_tag)
-            chunk = list()
-        else:
-            chunk.append(kv)
-    yield process_chunk(chunk, record_tag)
+def aps_iterator(file_obj: io.RawIOBase, record_tag=None):
+    for record in file_iterparse(file_obj, start=record_tag.encode()):
+        yield aps_record_to_xml(record)

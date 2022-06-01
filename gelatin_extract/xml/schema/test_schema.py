@@ -33,7 +33,7 @@ class Name(Combine):
     def combine_func(self, obj):
         return f"{obj['part1']} {obj['part2']}"
 
-class TestSchema(Schema):
+class ExampleSchema(Schema):
     string = Str("./string")
     date_time = DT("./date_time")
     date = Date("./date")
@@ -45,13 +45,13 @@ class TestSchema(Schema):
     name = Name()
 
 def test_fields():
-    data = TestSchema().deserialize(tree)
+    data = ExampleSchema().deserialize(tree)
     assert data['string'] == "Some String Data"
-    assert data['date_time'] == datetime.datetime(2021, 5, 4, 12, 5)
+    assert data['dateTime'] == datetime.datetime(2021, 5, 4, 12, 5)
     assert data['date'] == datetime.date(2021, 5, 4)
     assert data['booleans'] == [True, True, False, False]
     assert data['float'] - 1.234 < 0.001
     assert data['int'] == 23
     assert data['exists'] == True
-    assert data['does_not_exist'] == False
+    assert data['doesNotExist'] == False
     assert data['name'] == "George Burdell"

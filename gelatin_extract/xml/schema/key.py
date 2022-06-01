@@ -2,18 +2,14 @@ from lxml.etree import XPath
 
 def do_nothing(obj):
     return obj
-
 class XmlMixin(object):
-    def generate_key(self):
-        if self.raw_key and self.many == False:
-            return f"({self.raw_key})[1]"
-        else:
-            return self.raw_key
-
-    def create_key_func(self):
-        if self.key is None:
-            return do_nothing           
-        return XPath(self.key)
+    def make_accessor(self):
+        if self.data_key is None:
+            return do_nothing   
+        if self.data_key and self.many == False:
+            return XPath(f"({self.data_key})[1]")
+        else:     
+            return XPath(self.data_key)
 
     def to_string(self, elem):
         return "".join(elem.itertext())

@@ -14,13 +14,13 @@ class XmlFormat(object):
     namespaces: "Dict[str, str]"
     multidoc: bool
 
-xml_doc_re = re.compile(r"<\?xml".encode("utf-8"))
-preamble_re = re.compile(r"(?P<preamble>^\<\?xml .*?>\s+<(?P<list_tag>[^\s]+).*?\>)\<(?P<item_tag>[^\s]+).*?\>".encode("utf-8"))
+xml_doc_re = re.compile(r"\<\?xml".encode("utf-8"))
+preamble_re = re.compile(r"(?P<preamble>^\<\?xml .*?>\s+<(?P<list_tag>[^\s]+).*?\>)\s*\<(?P<item_tag>[^\s]+).*?\>".encode("utf-8"))
 
 def get_namespaces(preamble):
-    namespace_re = re.compile(r'xmlns:(?P<ns>[^=]+)="(?P<url>[^"]+)'.encode("utf-8"))
+    namespace_re = re.compile(r'xmlns:(?P<ns>[^=]+)="(?P<url>[^"]+)')
     namespace_matches = [m.groupdict() for m in namespace_re.finditer(preamble)]
-    return {m['ns'].decode("utf-8"): m['url'].decode("utf-8") for m in namespace_matches}
+    return {m['ns']: m['url'] for m in namespace_matches}
 
 def autodetect_format(chunk):
     """This function automatically detects the formatting of an XML 
@@ -30,15 +30,14 @@ def autodetect_format(chunk):
     """
     
     match = preamble_re.search(chunk).groupdict()
-    preamble = match['preamble']
-    list_tag = match['list_tag']
-    item_tag = match['item_tag']
-    postamble = f"</{list_tag.decode('utf-8')}>".encode("utf-8")
+    preamble = match['preamble'].decode()
+    list_tag = match['list_tag'].decode()
+    item_tag = match['item_tag'].decode()
+    postamble = f"</{list_tag}>"
     
     namespaces = get_namespaces(preamble)
 
     xml_docs = xml_doc_re.findall(chunk)
     multidoc = len(xml_docs) > 1
-    
     return XmlFormat(item_tag, list_tag, preamble, postamble, namespaces, multidoc)
 

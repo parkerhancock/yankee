@@ -8,7 +8,6 @@ def file_iterparse(in_file: io.RawIOBase, start:bytes, end:bytes=None) -> "Itera
     """
     buffer = bytearray()
     for event, chunk in file_event_parser(in_file, start, end):
-        #print(event, chunk[:50])
         if event in ("start", "middle", "end"):
             buffer += chunk
         if event == "end":
@@ -29,7 +28,7 @@ def safe_search(string, regex):
 
 def file_event_parser(in_file: io.RawIOBase, start: bytes, end: bytes=None, chunk_size=4000) -> "Iterable[Tuple[str, bytes]]": 
     """
-    Given an input file, and a start and end regex, yields
+    Given an input file, and a start and an optional end regex, yields
     "events" with chunks of the file.
 
     Inspired by etree.iterparse, yields back "events":
@@ -38,51 +37,57 @@ def file_event_parser(in_file: io.RawIOBase, start: bytes, end: bytes=None, chun
         middle - continuation of a record
         end - the end of a record
     """
-    if isinstance(start, bytes):
+    if isinstance(start, (bytes, str)):
+        if isinstance(start, str):
+            start = start.encode()
         start = re.compile(start)
-    if isinstance(end, bytes):
+    if isinstance(end, (bytes, str)):
+        if isinstance(end, str):
+            end = end.encode()
         end = re.compile(end)
 
-    print(start, end)
     chunk = bytearray()
-    min_window_size = max((len(start.pattern), len(end.pattern)))
-    recording = False
+    min_window_size = max((len(start.pattern), len(end.pattern) if end else 0))
+    last_event = None
     while True:
         chunk_length = len(chunk)
         start_index = safe_search(chunk, start).start(0)
         end_index = safe_search(chunk, end).end(0) if end else None
-
-        #print(event, start_index, end_index)
-        #print(chunk)
-        #print("*" * 80)
-
         # Middle of Record
-        if not start_index and not end_index:
-            if recording:
+        if start_index is None and end_index is None:
+            if last_event:
                 yield ("middle", chunk)
+                last_event = "middle"
             else:
                 yield (None, chunk)
+                last_event = None
             chunk = bytearray()
 
         #Start of Record
-        elif start_index and not end_index or (start_index and end_index and start_index < end_index):
-            if recording:
+        elif start_index is not None and end_index is None or (start_index and end_index and start_index < end_index):
+            if last_event:
                 yield ("end", chunk[:start_index])
+                last_event = "end"
             else:
                 yield (None, chunk[:start_index])
             yield ("start", chunk[start_index:start_index + len(start.pattern)])
+            last_event = "start"
             chunk = chunk[start_index + len(start.pattern):]
             recording = True
 
         # End of record
-        elif end_index and not start_index or (start_index and end_index and end_index < start_index):
+        elif end_index is not None and start_index is None or (start_index and end_index and end_index < start_index):
             # It is implied that you are recording
-            yield("end", chunk[:end_index+len(end.pattern)])
-            chunk = chunk[end_index+len(end.pattern):]
-            recording = False
+            yield("end", chunk[:end_index])
+            last_event = "end"
+            chunk = chunk[end_index:]
+            last_event = None
 
         if chunk_length <= min_window_size:
             new_chunk = in_file.read(chunk_size)
             if not new_chunk:
                 break
             chunk += new_chunk
+    
+    if last_event in ("middle", "start"):
+        yield ("end", b"")

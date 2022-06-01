@@ -1,4 +1,4 @@
-from ..autodetect import autodetect_format
+from .autodetect import autodetect_format
 from .iterparse import xml_iterparse
 
 def sample_xml(in_file_obj: "io.RawIOBase", out_file_obj: "io.RawIOBase", n_records:int=100):

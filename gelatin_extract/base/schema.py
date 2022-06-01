@@ -22,14 +22,14 @@ class Schema(Deserializer):
             self.fields.update(fields)
         self.bind()
 
-    def bind(self, name=None, parent=None, meta=None):
-        super().bind(name, parent, meta)
+    def bind(self, name=None, parent=None):
+        super().bind(name, parent)
         # Run bind for all contents
         for name, field in self.fields.items():
             if self.prefix:
-                field.bind(f"{self.name}_{name}", self, self.Meta)
+                field.bind(f"{self.name}_{name}", self)
             else:
-                field.bind(name, self, self.Meta)
+                field.bind(name, self)
 
     def deserialize(self, raw_obj) -> "Dict":
         obj = super().deserialize(raw_obj)
@@ -50,10 +50,10 @@ class Schema(Deserializer):
         return output
 
 class PolymorphicSchema(Schema):    
-    def bind(self, name=None, meta=None):
-        super().bind(self, name, meta)
+    def bind(self, name=None):
+        super().bind(self, name)
         for schema in self.schemas:
-            schema.bind(name, meta)
+            schema.bind(name)
     
     def choose_schema(self, obj):
         raise NotImplementedError("Must be implemented in subclass!")

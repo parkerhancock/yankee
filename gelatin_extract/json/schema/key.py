@@ -31,8 +31,8 @@ class JsonPath(object):
 
 
 class JsonMixin(object):
-    def create_key_func(self):
-        if self.key is None:
+    def make_accessor(self):
+        data_key = self.data_key or self.name
+        if data_key is None:
             return do_nothing
-        else:
-            return JsonPath(self.key, many=self.many)
+        return JsonPath(data_key, many=self.many)

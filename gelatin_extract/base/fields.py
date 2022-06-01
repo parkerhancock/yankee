@@ -16,7 +16,7 @@ class Field(Deserializer):
 
     def deserialize(self, obj):
         result = super().deserialize(obj)
-        if not result and self.required:
+        if result is None and self.required:
             raise ValueError(f"Field {self.name} is required! Key {self.key} not found in {obj}")
         return result
     
@@ -80,9 +80,21 @@ class Date(DateTime):
         return date_time.date() if date_time else None
 
 class Boolean(String):
+    def __init__(self, *args, true_value="true", case_sensitive=False, allow_none=True, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.true_value=true_value
+        self.case_sensitive=case_sensitive
+        self.allow_none=allow_none
+        if not self.case_sensitive:
+            self.true_value = self.true_value.lower()
+
     def deserialize(self, elem) -> "Optional[bool]":
         string = super(Boolean, self).deserialize(elem)
-        return string.lower() == "true" if string is not None else None
+        if string is None:
+            return None if self.allow_none else False
+        if not self.case_sensitive:
+            string = string.lower()
+        return string == self.true_value
 
 class Float(String):
     def deserialize(self, elem) -> "Optional[float]":
@@ -118,14 +130,14 @@ class List(Field):
         if callable(self.item_schema):
             self.item_schema = item_schema()
 
-    def bind(self, name, schema, meta):
-        super().bind(name, schema, meta)
-        self.item_schema.bind(None, schema, meta)
+    def bind(self, name, schema):
+        super().bind(name, schema)
+        self.item_schema.bind(None, schema)
 
     def deserialize(self, elem) -> "List":
-        if elem is None:
+        elements = super().deserialize(elem)
+        if elements is None:
             return list()
-        elements = self.key_func(elem)
         output = [self.item_schema.deserialize(e) for e in elements]
         return self.formatter([r for r in output if is_valid(r)])
 
@@ -136,13 +148,10 @@ class Combine(Schema):
     passed as an object to a combine function that 
     transforms it to a single string value"""
 
-    class Meta:
-        output_style = None
-
-    def bind(self, name=None, parent=None, meta=None):
-        super().bind(name, parent, meta)
+    def bind(self, name=None, parent=None):
+        super().bind(name, parent)
         for name, field in self.fields.items():
-            field.bind(name, self, None)
+            field.bind(name, self)
 
     def combine_func(self, obj):
         raise NotImplementedError("Must be implemented in subclass")

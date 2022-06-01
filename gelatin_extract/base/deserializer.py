@@ -1,64 +1,45 @@
-from gelatin_extract.util import underscore, camelize
-import logging
+from gelatin_extract.util import camelize
 
 def do_nothing(obj):
     return obj
 
 class Deserializer(object):
-    raw_key = None
+    data_key = None
     many = False
 
-    class Meta():
-        output_style = None
-
-    def __init__(self, key=None, required=False, output_style=None):
-        self.logger = logging.getLogger(self.__class__.__name__)
-        self.raw_key = key or self.raw_key
+    def __init__(self, data_key=None, required=False, output_style=None):
+        self.data_key = data_key or self.data_key
         self.required = required
         self.output_style = output_style
 
-    def bind(self, name=None, parent=None, meta=None):
+    def bind(self, name=None, parent=None):
         self.name = name
         self.parent = parent
-        self.Meta = meta
-        self.key = self.generate_key()
-        self.output_name = self.generate_output_name()
-        self.key_func = self.create_key_func()
+        self.output_name = camelize(self.name) if self.name else None
+        self.accessor = self.make_accessor()
 
-    def generate_output_name(self):
-        if self.name and self.Meta:
-            if self.Meta.output_style == "json":
-                return camelize(self.name)
-            elif self.Meta.output_style == "python":
-                return underscore(self.name)
-        elif self.name:
-                return self.name
-        else:
-            return underscore(self.__class__.__name__)
-
-    def generate_key(self):
-        return self.raw_key or self.name
-
-    def create_key_func(self):
+    def make_accessor(self):
         return do_nothing
 
+    def post_load(self, output_data, **kwargs):
+        return output_data
+
     def deserialize(self, obj):
-        self.raw_obj = obj
         if self.many:
             if obj is None:
                 return list()
-            return self.key_func(obj)
+            return self.accessor(obj)
         else:
             if obj is None:
                 return None
-            plucked_obj = self.key_func(obj)
+            plucked_obj = self.accessor(obj)
             if isinstance(plucked_obj, list):
                 if len(plucked_obj) > 1:
                     raise ValueError("Key Function returned multiple results!")
                 elif not plucked_obj:
-                    return None
+                    return self.post_load(None)
                 else:
-                    return plucked_obj[0]
-            return plucked_obj
+                    return self.post_load(plucked_obj[0])
+            return self.post_load(plucked_obj)
 
 
