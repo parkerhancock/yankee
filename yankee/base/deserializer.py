@@ -1,7 +1,9 @@
 from yankee.util import camelize
 
+
 def do_nothing(obj):
     return obj
+
 
 class Deserializer(object):
     data_key = None
@@ -45,5 +47,3 @@ class Deserializer(object):
                 else:
                     return self.post_load(plucked_obj[0])
             return self.post_load(plucked_obj)
-
-

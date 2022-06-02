@@ -3,6 +3,8 @@ import re
 us_re_1 = re.compile(r"([A-Z]+)([A-Z][a-z])")
 us_re_2 = re.compile(r"([a-z\d])([A-Z])")
 us_re_3 = re.compile(r"([^\d])(\d+)")
+
+
 def underscore(word: str) -> str:
     """
     Modified version from inflection library
@@ -14,7 +16,9 @@ def underscore(word: str) -> str:
     word = word.replace("-", "_")
     return word.lower()
 
+
 camelize_re = re.compile(r"(?:^|_)(.)")
+
 
 def camelize(string: str) -> str:
     """
@@ -23,8 +27,10 @@ def camelize(string: str) -> str:
     result = camelize_re.sub(lambda m: m.group(1).upper(), string)
     return result[0].lower() + result[1:]
 
+
 def is_valid(obj):
     return obj or isinstance(obj, (int, float))
+
 
 # Cleans whitespace from text data
 whitespace_re = re.compile(r"\s+")

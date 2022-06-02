@@ -1,6 +1,8 @@
 import io
+
 import lxml.etree as ET
-from .aps import aps_record_to_xml, aps_iterator
+
+from .aps import aps_iterator, aps_record_to_xml
 
 sample_doc = """
 PATN
@@ -40,19 +42,22 @@ ISD  19610400
 NAM  Lacek
 OCL  D 2932""".strip()
 
+
 def test_aps_conversion_from_string():
     result = aps_record_to_xml(sample_doc)
     tree = ET.fromstring(result)
-    assert tree.find("./APN").text == '1348817'
-    assert tree.find("./CLAS/OCL").text == 'D 2926'
+    assert tree.find("./APN").text == "1348817"
+    assert tree.find("./CLAS/OCL").text == "D 2926"
     assert len(tree.findall("./UREF")) == 3
 
-def test_aps_conversion_from_bytes():    
+
+def test_aps_conversion_from_bytes():
     result = aps_record_to_xml(sample_doc.encode())
     tree = ET.fromstring(result)
-    assert tree.find("./APN").text == '1348817'
-    assert tree.find("./CLAS/OCL").text == 'D 2926'
+    assert tree.find("./APN").text == "1348817"
+    assert tree.find("./CLAS/OCL").text == "D 2926"
     assert len(tree.findall("./UREF")) == 3
+
 
 sample_docs = """
 PATN
@@ -61,6 +66,7 @@ PATN
 WKU  101231241
 PATN
 WKU  123125123""".strip()
+
 
 def test_aps_iterator():
     counter = 0

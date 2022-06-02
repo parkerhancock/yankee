@@ -1,7 +1,11 @@
 import datetime
-import pytest
+
 import lxml.etree as ET
-from yankee.xml import Schema, fields as f
+import pytest
+
+from yankee.xml import Schema
+from yankee.xml import fields as f
+
 from .fields import *
 
 test_doc = """
@@ -34,6 +38,7 @@ test_doc = """
 
 tree = ET.fromstring(test_doc.encode())
 
+
 class NameSchema(Combine):
     part1 = f.Str("./part1")
     part2 = f.Str("./part2")
@@ -41,9 +46,11 @@ class NameSchema(Combine):
     def combine_func(self, obj):
         return f"{obj['part1']} {obj['part2']}"
 
+
 class PersonSchema(Zip):
     first_name = f.Str("./firstNames/name")
     age = f.Int("./ages/age")
+
 
 class ExampleSchema(Schema):
     string = f.Str("./string")
@@ -57,19 +64,17 @@ class ExampleSchema(Schema):
     name = NameSchema()
     people = PersonSchema()
 
+
 def test_fields():
     d = ExampleSchema()
     data = d.deserialize(tree)
-    assert data['string'] == "Some String Data"
-    assert data['dateTime'] == datetime.datetime(2021, 5, 4, 12, 5)
-    assert data['date'] == datetime.date(2021, 5, 4)
-    assert data['booleans'] == [True, True, False, False]
-    assert data['float'] - 1.234 < 0.001
-    assert data['int'] == 23
-    assert data['exists'] == True
-    assert data['doesNotExist'] == False
-    assert data['name'] == "George Burdell"
-    assert data['people'][0] == {
-        "firstName": "Peter",
-        "age": 15
-    }
+    assert data["string"] == "Some String Data"
+    assert data["dateTime"] == datetime.datetime(2021, 5, 4, 12, 5)
+    assert data["date"] == datetime.date(2021, 5, 4)
+    assert data["booleans"] == [True, True, False, False]
+    assert data["float"] - 1.234 < 0.001
+    assert data["int"] == 23
+    assert data["exists"] == True
+    assert data["doesNotExist"] == False
+    assert data["name"] == "George Burdell"
+    assert data["people"][0] == {"firstName": "Peter", "age": 15}

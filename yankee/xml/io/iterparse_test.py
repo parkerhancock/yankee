@@ -1,4 +1,5 @@
 import io
+
 from .iterparse import xml_iterparse
 
 example_doc = """
@@ -11,6 +12,7 @@ example_doc = """
 <collection>
 <item/>
 </collection>"""
+
 
 def test_xml_iterparse():
     counter = 0

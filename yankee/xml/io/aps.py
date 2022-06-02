@@ -1,5 +1,7 @@
 import io
+
 from ...io.iterparse import file_iterparse
+
 
 def aps_record_to_xml(text):
     if isinstance(text, str):
@@ -12,8 +14,9 @@ def aps_record_to_xml(text):
     section_tag = None
     item_tag = None
     for line in buf.readlines():
-        key = line[:5].strip(); value = line[5:].strip()
-        if key and not value: # New Section
+        key = line[:5].strip()
+        value = line[5:].strip()
+        if key and not value:  # New Section
             if item_tag:
                 output.append(f"</{item_tag}>")
                 item_tag = None

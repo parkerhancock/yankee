@@ -1,6 +1,8 @@
+import logging
+
 import lxml.etree as ET
 from file_utils import file_iterparse
-import logging
+
 
 class XmlProcessor(object):
     parser = None
@@ -26,7 +28,7 @@ class XmlProcessor(object):
     def _parse_element(self, el, meta):
         r = self.parser.deserialize(el)
         if meta is not None:
-            r['meta'] = meta
+            r["meta"] = meta
         return r
 
     def _process_multidoc(self, file_obj):
@@ -38,11 +40,14 @@ class XmlProcessor(object):
             yield xml_parser.fromstring(r)
 
     def _process_normal(self, file_obj):
-        et_gen = ET.iterparse(file_obj, load_dtd=True, recover=True, tag=self.record_tag, events=("end",))
+        et_gen = ET.iterparse(
+            file_obj, load_dtd=True, recover=True, tag=self.record_tag, events=("end",)
+        )
         et_gen.resolvers.add(self.dtd_resolver())
         for _, el in et_gen:
             yield el
             el.clear()
+
 
 def parse_multidoc(file_obj, xml_parser=None):
     start = r"<\?xml".encode("utf-8")
@@ -50,6 +55,7 @@ def parse_multidoc(file_obj, xml_parser=None):
     xml_parser = xml_parser or ET.XMLParser()
     for r in file_iterparse(file_obj, start, end):
         yield xml_parser.fromstring(r)
+
 
 def parse_xml_file(file_obj, record_tag):
     for _, el in ET.iterparse(file_obj, tag=record_tag):

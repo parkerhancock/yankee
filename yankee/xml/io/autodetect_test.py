@@ -26,19 +26,25 @@ example_doc = """<?xml version="1.0" encoding="UTF-8" ?>
 </uspat:PatentData>
 </uspat:PatentBulkData"""
 
+
 def test_autodetect():
     format = autodetect_format(example_doc.encode())
     assert format.item_tag == "uspat:PatentData"
     assert format.list_tag == "uspat:PatentBulkData"
-    assert format.preamble == '<?xml version="1.0" encoding="UTF-8" ?>\n<uspat:PatentBulkData xsi:schemaLocation="urn:us:gov:doc:uspto:patent ../../main/resources/Schema/USPatent/Document/PatentBulkData_V8_0.xsd" xmlns:pat="http://www.wipo.int/standards/XMLSchema/ST96/Patent" xmlns:uscom="urn:us:gov:doc:uspto:common" xmlns:uspat="urn:us:gov:doc:uspto:patent" xmlns:com="http://www.wipo.int/standards/XMLSchema/ST96/Common" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" com:st96Version="V3_1" com:ipoVersion="US_V8_0">'
-    assert format.postamble == '</uspat:PatentBulkData>'
+    assert (
+        format.preamble
+        == '<?xml version="1.0" encoding="UTF-8" ?>\n<uspat:PatentBulkData xsi:schemaLocation="urn:us:gov:doc:uspto:patent ../../main/resources/Schema/USPatent/Document/PatentBulkData_V8_0.xsd" xmlns:pat="http://www.wipo.int/standards/XMLSchema/ST96/Patent" xmlns:uscom="urn:us:gov:doc:uspto:common" xmlns:uspat="urn:us:gov:doc:uspto:patent" xmlns:com="http://www.wipo.int/standards/XMLSchema/ST96/Common" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" com:st96Version="V3_1" com:ipoVersion="US_V8_0">'
+    )
+    assert format.postamble == "</uspat:PatentBulkData>"
     assert format.multidoc == False
     assert format.namespaces == {
-        'pat': 'http://www.wipo.int/standards/XMLSchema/ST96/Patent', 
-        'uscom': 'urn:us:gov:doc:uspto:common', 'uspat': 'urn:us:gov:doc:uspto:patent', 
-        'com': 'http://www.wipo.int/standards/XMLSchema/ST96/Common', 
-        'xsi': 'http://www.w3.org/2001/XMLSchema-instance'
+        "pat": "http://www.wipo.int/standards/XMLSchema/ST96/Patent",
+        "uscom": "urn:us:gov:doc:uspto:common",
+        "uspat": "urn:us:gov:doc:uspto:patent",
+        "com": "http://www.wipo.int/standards/XMLSchema/ST96/Common",
+        "xsi": "http://www.w3.org/2001/XMLSchema-instance",
     }
+
 
 example_multidoc = """<?xml version="1.0" encoding="UTF-8" ?>
 <uspat:PatentBulkData xsi:schemaLocation="urn:us:gov:doc:uspto:patent ../../main/resources/Schema/USPatent/Document/PatentBulkData_V8_0.xsd" xmlns:pat="http://www.wipo.int/standards/XMLSchema/ST96/Patent" xmlns:uscom="urn:us:gov:doc:uspto:common" xmlns:uspat="urn:us:gov:doc:uspto:patent" xmlns:com="http://www.wipo.int/standards/XMLSchema/ST96/Common" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" com:st96Version="V3_1" com:ipoVersion="US_V8_0">
@@ -68,6 +74,7 @@ example_multidoc = """<?xml version="1.0" encoding="UTF-8" ?>
     </uspat:PatentCaseMetadata>
 </uspat:PatentData>
 </uspat:PatentBulkData"""
+
 
 def test_autodetect_on_multidoc():
     format = autodetect_format(example_multidoc.encode())

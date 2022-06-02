@@ -1,7 +1,10 @@
-import re
 import io
+import re
 
-def file_iterparse(in_file: io.RawIOBase, start:bytes, end:bytes=None) -> "Iterable[bytes]":
+
+def file_iterparse(
+    in_file: io.RawIOBase, start: bytes, end: bytes = None
+) -> "Iterable[bytes]":
     """
     Given an input file, and a start regex, yields individual records from the file
     Takes an optional end regex to eliminate unwanted or unnessary interstitial matter
@@ -14,19 +17,25 @@ def file_iterparse(in_file: io.RawIOBase, start:bytes, end:bytes=None) -> "Itera
             yield bytes(buffer)
             buffer = bytearray()
 
+
 class NullObject(object):
     """A nothing object that returns null to all possible
     method calls"""
+
     def __getattr__(self, name: str) -> "Any":
         return self.null_function
 
     def null_function(self, *args, **kwargs):
         return None
 
+
 def safe_search(string, regex):
     return regex.search(string) or NullObject()
 
-def file_event_parser(in_file: io.RawIOBase, start: bytes, end: bytes=None, chunk_size=4000) -> "Iterable[Tuple[str, bytes]]": 
+
+def file_event_parser(
+    in_file: io.RawIOBase, start: bytes, end: bytes = None, chunk_size=4000
+) -> "Iterable[Tuple[str, bytes]]":
     """
     Given an input file, and a start and an optional end regex, yields
     "events" with chunks of the file.
@@ -63,22 +72,30 @@ def file_event_parser(in_file: io.RawIOBase, start: bytes, end: bytes=None, chun
                 last_event = None
             chunk = bytearray()
 
-        #Start of Record
-        elif start_index is not None and end_index is None or (start_index and end_index and start_index < end_index):
+        # Start of Record
+        elif (
+            start_index is not None
+            and end_index is None
+            or (start_index and end_index and start_index < end_index)
+        ):
             if last_event:
                 yield ("end", chunk[:start_index])
                 last_event = "end"
             else:
                 yield (None, chunk[:start_index])
-            yield ("start", chunk[start_index:start_index + len(start.pattern)])
+            yield ("start", chunk[start_index : start_index + len(start.pattern)])
             last_event = "start"
-            chunk = chunk[start_index + len(start.pattern):]
+            chunk = chunk[start_index + len(start.pattern) :]
             recording = True
 
         # End of record
-        elif end_index is not None and start_index is None or (start_index and end_index and end_index < start_index):
+        elif (
+            end_index is not None
+            and start_index is None
+            or (start_index and end_index and end_index < start_index)
+        ):
             # It is implied that you are recording
-            yield("end", chunk[:end_index])
+            yield ("end", chunk[:end_index])
             last_event = "end"
             chunk = chunk[end_index:]
             last_event = None
@@ -88,6 +105,6 @@ def file_event_parser(in_file: io.RawIOBase, start: bytes, end: bytes=None, chun
             if not new_chunk:
                 break
             chunk += new_chunk
-    
+
     if last_event in ("middle", "start"):
         yield ("end", b"")

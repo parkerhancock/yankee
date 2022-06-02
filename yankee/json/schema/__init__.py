@@ -1,2 +1,2 @@
-from .schema import Schema, PolymorphicSchema
 from . import fields
+from .schema import PolymorphicSchema, Schema

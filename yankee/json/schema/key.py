@@ -1,7 +1,9 @@
-from collections.abc import Sequence, Mapping
+from collections.abc import Mapping, Sequence
+
 
 def do_nothing(obj):
     return obj
+
 
 class JsonPath(object):
     def __init__(self, key, many=False):
@@ -20,9 +22,13 @@ class JsonPath(object):
                 else:
                     raise IndexError(f"Cannot get key {k} from {obj}")
             if not self.many and isinstance(obj, list):
-                raise ValueError(f"Expected {'.'.join(self.key)} to produce single value, got many: {obj}")
+                raise ValueError(
+                    f"Expected {'.'.join(self.key)} to produce single value, got many: {obj}"
+                )
             elif self.many and not isinstance(obj, list):
-                raise ValueError(f"Expected {'.'.join(self.key)} to produce many values, got one: {obj}")
+                raise ValueError(
+                    f"Expected {'.'.join(self.key)} to produce many values, got one: {obj}"
+                )
             return obj
         except (IndexError, KeyError):
             if self.many:

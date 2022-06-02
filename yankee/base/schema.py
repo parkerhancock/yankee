@@ -1,18 +1,25 @@
-from .deserializer import Deserializer
 from yankee.util import is_valid
 
+from .deserializer import Deserializer
+
+
 class Schema(Deserializer):
-    class Meta():
+    class Meta:
         output_style = None
 
-    def __init__(self, data_key=None, flatten=False, prefix=False, required=False, output_style=None):
+    def __init__(
+        self,
+        data_key=None,
+        flatten=False,
+        prefix=False,
+        required=False,
+        output_style=None,
+    ):
         super().__init__(data_key, required, output_style)
         self.Meta.output_style = output_style
         self.flatten = flatten
         self.prefix = prefix
         self.bind()
-
-
 
     def bind(self, name=None, parent=None):
         # Make sure that fields are grabbed from superclasses as well
@@ -48,12 +55,13 @@ class Schema(Deserializer):
             output.update(value)
         return output
 
-class PolymorphicSchema(Schema):    
+
+class PolymorphicSchema(Schema):
     def bind(self, name=None):
         super().bind(self, name)
         for schema in self.schemas:
             schema.bind(name)
-    
+
     def choose_schema(self, obj):
         raise NotImplementedError("Must be implemented in subclass!")
 
@@ -64,6 +72,7 @@ class PolymorphicSchema(Schema):
         obj = super().deserialize(obj)
         schema = self.choose_schema(obj)
         return schema.deserialize(raw_obj)
+
 
 class ZipSchema(Schema):
     _list_field = None
@@ -81,19 +90,19 @@ class ZipSchema(Schema):
         list_fields = dict()
         if not hasattr(self, "_keys"):
             self._keys = {k: v.data_key for k, v in self.fields.items()}
-        
+
         for k, v in self.fields.items():
             v.data_key = None
             list_field = self._list_field(v, data_key=self._keys[k])
             list_field.bind(k, self)
             list_fields[k] = list_field
-        self.fields = list_fields       
+        self.fields = list_fields
 
     def lists_to_records(self, obj):
         keys = tuple(obj.keys())
         values = tuple(obj.values())
         return [dict(zip(keys, v)) for v in zip(*values)]
-    
+
     def deserialize(self, raw_obj) -> "Dict":
         obj = super().deserialize(raw_obj)
         return self.lists_to_records(obj)
