@@ -8,7 +8,8 @@ class Deserializer(object):
     many = False
 
     def __init__(self, data_key=None, required=False, output_style=None):
-        self.data_key = data_key or self.data_key
+        if self.data_key is None:
+            self.data_key = data_key
         self.required = required
         self.output_style = output_style
 
@@ -16,7 +17,10 @@ class Deserializer(object):
         self.name = name
         self.parent = parent
         self.output_name = camelize(self.name) if self.name else None
-        self.accessor = self.make_accessor()
+        if self.data_key == False:
+            self.accessor = do_nothing
+        else:
+            self.accessor = self.make_accessor()
 
     def make_accessor(self):
         return do_nothing

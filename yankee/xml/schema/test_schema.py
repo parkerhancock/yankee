@@ -1,7 +1,7 @@
 import datetime
 import pytest
 import lxml.etree as ET
-from .schema import Schema
+from yankee.xml import Schema, fields as f
 from .fields import *
 
 test_doc = """
@@ -21,31 +21,45 @@ test_doc = """
     <part1>George</part1>
     <part2>Burdell</part2>
     <random>Some data</random>
+    <firstNames>
+        <name>Peter</name>
+        <name>Parker</name>
+    </firstNames>
+    <ages>
+        <age>15</age>
+        <age>21</age>
+    </ages>
 </testDoc>
 """.strip()
 
 tree = ET.fromstring(test_doc.encode())
 
-class Name(Combine):
-    part1 = Str("./part1")
-    part2 = Str("./part2")
+class NameSchema(Combine):
+    part1 = f.Str("./part1")
+    part2 = f.Str("./part2")
 
     def combine_func(self, obj):
         return f"{obj['part1']} {obj['part2']}"
 
+class PersonSchema(Zip):
+    first_name = f.Str("./firstNames/name")
+    age = f.Int("./ages/age")
+
 class ExampleSchema(Schema):
-    string = Str("./string")
-    date_time = DT("./date_time")
-    date = Date("./date")
-    booleans = List(Bool, "./booleans/bool")
-    float = Float("./float")
-    int = Int("./int")
-    exists = Exists("./exists")
-    does_not_exist = Exists("./does_not_exist")
-    name = Name()
+    string = f.Str("./string")
+    date_time = f.DT("./date_time")
+    date = f.Date("./date")
+    booleans = f.List(Bool, "./booleans/bool")
+    float = f.Float("./float")
+    int = f.Int("./int")
+    exists = f.Exists("./exists")
+    does_not_exist = f.Exists("./does_not_exist")
+    name = NameSchema()
+    people = PersonSchema()
 
 def test_fields():
-    data = ExampleSchema().deserialize(tree)
+    d = ExampleSchema()
+    data = d.deserialize(tree)
     assert data['string'] == "Some String Data"
     assert data['dateTime'] == datetime.datetime(2021, 5, 4, 12, 5)
     assert data['date'] == datetime.date(2021, 5, 4)
@@ -55,3 +69,7 @@ def test_fields():
     assert data['exists'] == True
     assert data['doesNotExist'] == False
     assert data['name'] == "George Burdell"
+    assert data['people'][0] == {
+        "firstName": "Peter",
+        "age": 15
+    }

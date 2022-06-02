@@ -5,12 +5,16 @@ class Schema(Deserializer):
     class Meta():
         output_style = None
 
-    def __init__(self, key=None, fields=None, flatten=False, prefix=False, required=False, output_style=None):
-        super().__init__(key, required, output_style)
+    def __init__(self, data_key=None, flatten=False, prefix=False, required=False, output_style=None):
+        super().__init__(data_key, required, output_style)
         self.Meta.output_style = output_style
         self.flatten = flatten
         self.prefix = prefix
+        self.bind()
 
+
+
+    def bind(self, name=None, parent=None):
         # Make sure that fields are grabbed from superclasses as well
         class_fields = list()
         for c in reversed(self.__class__.mro()):
@@ -18,13 +22,8 @@ class Schema(Deserializer):
                 (k, v) for k, v in c.__dict__.items() if isinstance(v, Deserializer)
             ]
         self.fields = dict(class_fields)
-        if isinstance(fields, dict):
-            self.fields.update(fields)
-        self.bind()
 
-    def bind(self, name=None, parent=None):
         super().bind(name, parent)
-        # Run bind for all contents
         for name, field in self.fields.items():
             if self.prefix:
                 field.bind(f"{self.name}_{name}", self)
@@ -65,3 +64,36 @@ class PolymorphicSchema(Schema):
         obj = super().deserialize(obj)
         schema = self.choose_schema(obj)
         return schema.deserialize(raw_obj)
+
+class ZipSchema(Schema):
+    _list_field = None
+    """Sometimes data is provided as a bunch of arrays, like:
+    {
+        "name": ["Peter", "Parker"],
+        "age": [15, 25],
+    }
+    and we want to build out complete records from this data.
+    This field performs that step:
+    """
+
+    def bind(self, name=None, parent=None):
+        super().bind(name=name, parent=parent)
+        list_fields = dict()
+        if not hasattr(self, "_keys"):
+            self._keys = {k: v.data_key for k, v in self.fields.items()}
+        
+        for k, v in self.fields.items():
+            v.data_key = None
+            list_field = self._list_field(v, data_key=self._keys[k])
+            list_field.bind(k, self)
+            list_fields[k] = list_field
+        self.fields = list_fields       
+
+    def lists_to_records(self, obj):
+        keys = tuple(obj.keys())
+        values = tuple(obj.values())
+        return [dict(zip(keys, v)) for v in zip(*values)]
+    
+    def deserialize(self, raw_obj) -> "Dict":
+        obj = super().deserialize(raw_obj)
+        return self.lists_to_records(obj)

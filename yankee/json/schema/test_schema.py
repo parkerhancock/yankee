@@ -1,7 +1,6 @@
 import datetime
 import pytest
-from .schema import Schema
-from .fields import *
+from yankee.json import Schema, ZipSchema, fields as f
 
 doc = {
     "string": "Some String Data",
@@ -25,28 +24,28 @@ doc = {
     "age": [15, 21],
 }
 
-class Name(Combine):
-    part1 = Str()
-    part2 = Str()
+class NameSchema(f.Combine):
+    part1 = f.Str()
+    part2 = f.Str()
 
     def combine_func(self, obj):
         return f"{obj['part1']} {obj['part2']}"
 
-class Person(Zip):
-    first_name = Str()
-    age = Int()
+class PersonSchema(ZipSchema):
+    first_name = f.Str()
+    age = f.Int()
 
 class ExampleSchema(Schema):
-    string = Str()
-    date_time = DT()
-    date = Date()
-    booleans = List(Bool, data_key="booleans")
-    float = Float()
-    int = Int()
-    exists = Exists()
-    does_not_exist = Exists()
-    name = Name()
-    people = Person(None)
+    string = f.Str()
+    date_time = f.DT()
+    date = f.Date()
+    booleans = f.List(f.Bool, data_key="booleans")
+    float = f.Float()
+    int = f.Int()
+    exists = f.Exists()
+    does_not_exist = f.Exists()
+    name = NameSchema()
+    people = PersonSchema(data_key=False)
 
 def test_fields():
     data = ExampleSchema().deserialize(doc)
@@ -59,4 +58,4 @@ def test_fields():
     assert data['exists'] == True
     assert data['doesNotExist'] == False
     assert data['name'] == "George Burdell"
-    assert data['people'][0] == {"first_name": "Peter", "age": 15}
+    assert data['people'][0] == {"firstName": "Peter", "age": 15}

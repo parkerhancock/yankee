@@ -181,15 +181,17 @@ class Zip(Schema):
     """
 
     def bind(self, name=None, parent=None):
-        super().bind(name, parent)
+        super().bind(name=name, parent=parent)
         list_fields = dict()
+        if not hasattr(self, "_keys"):
+            self._keys = {k: v.data_key for k, v in self.fields.items()}
+        
         for k, v in self.fields.items():
-            key = v.data_key
             v.data_key = None
-            list_field = self._list_field(v, key)
+            list_field = self._list_field(v, data_key=self._keys[k])
             list_field.bind(k, self)
             list_fields[k] = list_field
-        self.fields = list_fields
+        self.fields = list_fields       
 
     def lists_to_records(self, obj):
         keys = tuple(obj.keys())
@@ -197,7 +199,7 @@ class Zip(Schema):
         return [dict(zip(keys, v)) for v in zip(*values)]
     
     def deserialize(self, raw_obj) -> "Dict":
-        obj = {k: v.accessor(raw_obj) for k, v in self.fields.items()}
+        obj = super().deserialize(raw_obj)
         return self.lists_to_records(obj)
 
 

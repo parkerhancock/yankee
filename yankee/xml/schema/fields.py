@@ -38,6 +38,9 @@ class Combine(XmlMixin, fields.Combine):
 class Alternative(XmlMixin, fields.Alternative):
     pass
 
+class Zip(XmlMixin, fields.Zip):
+    _list_field = List
+
 #Aliases
 Str = String
 DT = DateTime
