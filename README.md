@@ -14,8 +14,7 @@ There are two main modules: `yankee.json.schema` and `yankee.xml.schema`. Those 
 ### JSON Deserializer Example
 
 ```python
-    from yankee.json.schema import Schema
-    from yankee.json.schema import fields
+    from yankee.json import Schema, fields
 
     class JsonExample(Schema):
         name = fields.String()
@@ -52,8 +51,7 @@ can be used to pluck an item from the JSON object.
 
 ```python
     import lxml.etree as ET
-    from yankee.xml.schema import Schema
-    from yankee.xml.schema import fields
+    from yankee.xml import Schema, fields
 
     class XmlExample(Schema):
         name = fields.String("./name")
