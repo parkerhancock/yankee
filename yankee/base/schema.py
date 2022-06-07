@@ -22,6 +22,7 @@ class Schema(Deserializer):
         self.bind()
 
     def bind(self, name=None, parent=None):
+        super().bind(name, parent)
         # Make sure that fields are grabbed from superclasses as well
         class_fields = list()
         for c in reversed(self.__class__.mro()):
@@ -29,8 +30,6 @@ class Schema(Deserializer):
                 (k, v) for k, v in c.__dict__.items() if isinstance(v, Deserializer)
             ]
         self.fields = dict(class_fields)
-
-        super().bind(name, parent)
         for name, field in self.fields.items():
             if self.prefix:
                 field.bind(f"{self.name}_{name}", self)

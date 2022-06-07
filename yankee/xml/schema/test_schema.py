@@ -36,9 +36,8 @@ test_doc = """
 </testDoc>
 """.strip()
 
+
 tree = ET.fromstring(test_doc.encode())
-
-
 class NameSchema(Combine):
     part1 = f.Str("./part1")
     part2 = f.Str("./part2")
@@ -78,3 +77,38 @@ def test_fields():
     assert data["doesNotExist"] == False
     assert data["name"] == "George Burdell"
     assert data["people"][0] == {"firstName": "Peter", "age": 15}
+
+ns_test_doc = """
+<?xml version='1.0' encoding='UTF-8'?>
+<h:testDoc xmlns:h="http:www.w3.org/TR/html4/">
+    <h:string>Some String Data</h:string>
+    <h:date_time>2021-05-04T12:05</h:date_time>
+    <h:date>2021-05-04</h:date>
+    <h:booleans>
+        <bool>True</bool>
+        <bool>true</bool>
+        <bool>False</bool>
+        <bool>false</bool>
+    </h:booleans>
+</h:testDoc>
+""".strip()
+
+ns_tree = ET.fromstring(ns_test_doc.encode())
+
+class NsSchema(Schema):
+    class Meta():
+        namespaces = {
+            "h": "http:www.w3.org/TR/html4/"
+        }
+    string = f.Str("./h:string")
+    date_time = f.DT("./h:date_time")
+    date = f.Date("./h:date")
+    booleans = f.List(Bool, "./h:booleans/bool")
+   
+def test_ns_fields():
+    d = NsSchema()
+    data = d.deserialize(ns_tree)
+    assert data["string"] == "Some String Data"
+    assert data["dateTime"] == datetime.datetime(2021, 5, 4, 12, 5)
+    assert data["date"] == datetime.date(2021, 5, 4)
+    assert data["booleans"] == [True, True, False, False]

@@ -18,6 +18,8 @@ class Deserializer(object):
     def bind(self, name=None, parent=None):
         self.name = name
         self.parent = parent
+        if self.parent is not None:
+            self.Meta = getattr(parent, "Meta", dict())
         self.output_name = camelize(self.name) if self.name else None
         if self.data_key == False:
             self.accessor = do_nothing
