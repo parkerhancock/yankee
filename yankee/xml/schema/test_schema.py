@@ -3,7 +3,7 @@ import datetime
 import lxml.etree as ET
 import pytest
 
-from yankee.xml import Schema, ZipSchema
+from yankee.xml import Schema
 from yankee.xml import fields as f
 
 from .fields import *
@@ -52,13 +52,13 @@ def test_fields():
     d = ExampleSchema()
     data = d.deserialize(tree)
     assert data["string"] == "Some String Data"
-    assert data["dateTime"] == datetime.datetime(2021, 5, 4, 12, 5)
+    assert data["date_time"] == datetime.datetime(2021, 5, 4, 12, 5)
     assert data["date"] == datetime.date(2021, 5, 4)
     assert data["booleans"] == [True, True, False, False]
     assert data["float"] - 1.234 < 0.001
     assert data["int"] == 23
     assert data["exists"] == True
-    assert data["doesNotExist"] == False
+    assert data["does_not_exist"] == False
     assert data["name"] == "George Burdell"
 
 ns_test_doc = """
@@ -90,8 +90,8 @@ class NsSchema(Schema):
    
 def test_ns_fields():
     d = NsSchema()
-    data = d.deserialize(ns_tree)
+    data = d.load(ns_tree)
     assert data["string"] == "Some String Data"
-    assert data["dateTime"] == datetime.datetime(2021, 5, 4, 12, 5)
+    assert data["date_time"] == datetime.datetime(2021, 5, 4, 12, 5)
     assert data["date"] == datetime.date(2021, 5, 4)
     assert data["booleans"] == [True, True, False, False]

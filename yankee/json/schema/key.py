@@ -1,5 +1,7 @@
 from collections.abc import Mapping, Sequence
 
+from yankee.util import camelize
+
 
 def do_nothing(obj):
     return obj
@@ -41,4 +43,4 @@ class JsonMixin(object):
         data_key = self.data_key or self.name
         if data_key is None:
             return do_nothing
-        return JsonPath(data_key, many=self.many)
+        return JsonPath(camelize(data_key), many=self.many)

@@ -35,3 +35,6 @@ def is_valid(obj):
 # Cleans whitespace from text data
 whitespace_re = re.compile(r"\s+")
 clean_whitespace = lambda s: whitespace_re.sub(" ", s).strip().strip(",").strip()
+
+def do_nothing(obj):
+    return obj

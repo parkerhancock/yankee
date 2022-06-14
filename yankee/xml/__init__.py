@@ -1,2 +1,2 @@
 from .schema import fields
-from .schema.schema import PolymorphicSchema, Schema, ZipSchema, Deserializer
+from .schema.schema import PolymorphicSchema, Schema, Deserializer

@@ -16,12 +16,11 @@ class Field(Deserializer):
         self.required = required
 
     def deserialize(self, obj):
-        result = super().deserialize(obj)
-        if result is None and self.required:
+        if obj is None and self.required:
             raise ValueError(
                 f"Field {self.name} is required! Key {self.key} not found in {obj}"
             )
-        return result
+        return obj
 
 
 class String(Field):
@@ -36,7 +35,7 @@ class String(Field):
         else:
             return self.formatter(self.to_string(elem))
 
-    def to_string(self, elem):
+    def to_string(self, elem): # Abstracted out since XML requires a function call
         return str(elem)
 
 
@@ -146,17 +145,16 @@ class Combine(Schema):
     """Can have fields like a schema that are then
     passed as an object to a combine function that
     transforms it to a single string value"""
+ 
 
-    def bind(self, name=None, parent=None):
-        super().bind(name, parent)
-        for name, field in self.fields.items():
-            field.bind(name, self)
+    def get_output_name(self, name):
+        return name
 
     def combine_func(self, obj):
         raise NotImplementedError("Must be implemented in subclass")
 
-    def deserialize(self, et_elem) -> "Optional[str]":
-        obj = super().deserialize(et_elem)
+    def deserialize(self, raw_obj) -> "Optional[str]":
+        obj = super().deserialize(raw_obj)
         return self.combine_func(obj)
 
 
@@ -181,18 +179,7 @@ class Zip(Schema):
     This field performs that step:
     """
 
-    def bind(self, name=None, parent=None):
-        super().bind(name=name, parent=parent)
-        list_fields = dict()
-        if not hasattr(self, "_keys"):
-            self._keys = {k: v.data_key for k, v in self.fields.items()}
 
-        for k, v in self.fields.items():
-            v.data_key = None
-            list_field = self._list_field(v, data_key=self._keys[k])
-            list_field.bind(k, self)
-            list_fields[k] = list_field
-        self.fields = list_fields
 
     def lists_to_records(self, obj):
         keys = tuple(obj.keys())

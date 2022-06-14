@@ -13,7 +13,3 @@ class Schema(XmlMixin, schema.Schema):
 
 class PolymorphicSchema(XmlMixin, schema.PolymorphicSchema):
     pass
-
-
-class ZipSchema(XmlMixin, schema.ZipSchema):
-    _list_field = List
