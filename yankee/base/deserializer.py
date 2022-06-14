@@ -1,16 +1,34 @@
-from yankee.util import camelize, underscore, do_nothing
+from yankee.util import do_nothing
+from collections.abc import Mapping, Sequence
+
+class DefaultPath():
+    def __init__(self, data_key):
+        self.key = data_key.split(".")
+
+    def __call__(self, obj):
+        try:
+            result = obj
+            for k in self.key:
+                if isinstance(result, Sequence) and k.isdigit():
+                    result = result[int(k)]
+                elif isinstance(result, Mapping):
+                    result = result[k]
+                else:
+                    result = getattr(result, k)
+            return result
+        except (AttributeError, KeyError, IndexError):
+            return None
+
 
 
 class Deserializer(object):
-    data_key = None
     many = False
 
     class Meta:
         pass
 
     def __init__(self, data_key=None, required=False):
-        if self.data_key is None:
-            self.data_key = data_key
+        self.data_key = data_key
         self.required = required
         self.bind()
 
@@ -23,7 +41,12 @@ class Deserializer(object):
         return self
 
     def make_accessor(self):
-        return do_nothing
+        if self.data_key == False:
+            return do_nothing
+        key = self.data_key or self.name
+        if key is None:
+            return do_nothing
+        return DefaultPath(key)
 
     def load(self, obj):
         plucked_obj = self.get_obj(obj)

@@ -25,6 +25,9 @@ class NameSchema(f.Combine):
     def combine_func(self, obj):
         return f"{obj['part1']} {obj['part2']}"
 
+class SubSchema(Schema):
+    string = f.Str()
+    float = f.Float()
 
 class ExampleSchema(Schema):
     string = f.Str()
@@ -36,10 +39,12 @@ class ExampleSchema(Schema):
     exists = f.Exists()
     does_not_exist = f.Exists()
     name = NameSchema()
+    sub = SubSchema(False)
 
 
 def test_fields():
-    data = ExampleSchema().load(doc)
+    schema = ExampleSchema()
+    data = schema.load(doc)
     assert data["string"] == "Some String Data"
     assert data["date_time"] == datetime.datetime(2021, 5, 4, 12, 5)
     assert data["date"] == datetime.date(2021, 5, 4)
@@ -49,3 +54,4 @@ def test_fields():
     assert data["exists"] == True
     assert data["does_not_exist"] == False
     assert data["name"] == "George Burdell"
+    assert data['sub']['string'] == "Some String Data"

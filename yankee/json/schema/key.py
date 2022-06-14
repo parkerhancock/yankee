@@ -40,6 +40,8 @@ class JsonPath(object):
 
 class JsonMixin(object):
     def make_accessor(self):
+        if self.data_key == False:
+            return do_nothing
         data_key = self.data_key or self.name
         if data_key is None:
             return do_nothing
