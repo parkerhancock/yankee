@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "yankee"
-version = "0.1.5"
+version = "0.1.6"
 description = "lightweight, simple, and fast declarative XML and JSON data extraction"
 authors = ["Parker Hancock <633163+parkerhancock@users.noreply.github.com>"]
 license = "Apache Software License 2.0"
@@ -13,7 +13,7 @@ classifiers =[
 ]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.7"
 lxml = "^4.8.0"
 python-dateutil = "^2.8.2"
 
