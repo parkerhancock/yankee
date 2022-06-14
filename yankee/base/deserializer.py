@@ -17,6 +17,7 @@ class Deserializer(object):
             self.data_key = data_key
         self.required = required
         self.output_style = output_style
+        self.bind()
 
     def bind(self, name=None, parent=None):
         self.name = name

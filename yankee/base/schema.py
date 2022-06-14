@@ -16,11 +16,10 @@ class Schema(Deserializer):
         required=False,
         output_style=None,
     ):
-        super().__init__(data_key, required, output_style)
         self.Meta.output_style = output_style
         self.flatten = flatten
         self.prefix = prefix
-        self.bind()
+        super().__init__(data_key, required, output_style)
 
     def bind(self, name=None, parent=None):
         super().bind(name, parent)

@@ -46,9 +46,7 @@ class DateTime(String):
     ):
         super().__init__(data_key, required, attr, formatter)
         if dt_format:
-            self.parse_date = lambda s: datetime.datetime.strftime(s, dt_format)
-        else:
-            self.parse_date = lambda s: datetime.datetime.fromisoformat(s)
+            self.parse_date = lambda s: datetime.datetime.strptime(s, dt_format)
 
     def parse_date(self, text:str):
         try:
@@ -123,13 +121,13 @@ class List(Field):
     many = True
 
     def __init__(self, item_schema, data_key=None, formatter=lambda l: l, **kwargs):
-        super().__init__(data_key=data_key, **kwargs)
         self.formatter = formatter
         self.item_schema = item_schema
         if callable(self.item_schema):
             self.item_schema = item_schema()
+        super().__init__(data_key=data_key, **kwargs)
 
-    def bind(self, name, schema):
+    def bind(self, name=None, schema=None):
         super().bind(name, schema)
         self.item_schema.bind(None, schema)
 
