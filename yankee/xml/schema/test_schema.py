@@ -3,7 +3,7 @@ import datetime
 import lxml.etree as ET
 import pytest
 
-from yankee.xml import Schema
+from yankee.xml import Schema, ZipSchema
 from yankee.xml import fields as f
 
 from .fields import *
@@ -25,14 +25,6 @@ test_doc = """
     <part1>George</part1>
     <part2>Burdell</part2>
     <random>Some data</random>
-    <firstNames>
-        <name>Peter</name>
-        <name>Parker</name>
-    </firstNames>
-    <ages>
-        <age>15</age>
-        <age>21</age>
-    </ages>
 </testDoc>
 """.strip()
 
@@ -44,13 +36,6 @@ class NameSchema(Combine):
 
     def combine_func(self, obj):
         return f"{obj['part1']} {obj['part2']}"
-
-
-class PersonSchema(Zip):
-    first_name = f.Str("./firstNames/name")
-    age = f.Int("./ages/age")
-
-
 class ExampleSchema(Schema):
     string = f.Str("./string")
     date_time = f.DT("./date_time")
@@ -61,7 +46,6 @@ class ExampleSchema(Schema):
     exists = f.Exists("./exists")
     does_not_exist = f.Exists("./does_not_exist")
     name = NameSchema()
-    people = PersonSchema()
 
 
 def test_fields():
@@ -76,7 +60,6 @@ def test_fields():
     assert data["exists"] == True
     assert data["doesNotExist"] == False
     assert data["name"] == "George Burdell"
-    assert data["people"][0] == {"firstName": "Peter", "age": 15}
 
 ns_test_doc = """
 <?xml version='1.0' encoding='UTF-8'?>

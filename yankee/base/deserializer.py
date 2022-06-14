@@ -9,6 +9,9 @@ class Deserializer(object):
     data_key = None
     many = False
 
+    class Meta:
+        pass
+
     def __init__(self, data_key=None, required=False, output_style=None):
         if self.data_key is None:
             self.data_key = data_key

@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import datetime
 
-from dateutil.parser import parse as parse_date
-from dateutil.parser._parser import ParserError
+from dateutil.parser import parse as parse_dt, isoparse
 
 from yankee.util import clean_whitespace, is_valid
 
@@ -51,38 +50,18 @@ class DateTime(String):
         else:
             self.parse_date = lambda s: datetime.datetime.fromisoformat(s)
 
+    def parse_date(self, text:str):
+        try:
+            return isoparse(text)
+        except ValueError:
+            return parse_dt(text)
+
     def deserialize(self, elem) -> "Optional[datetime.datetime]":
         string = super(DateTime, self).deserialize(elem)
         if not string:
             return None
-        try:
-            return self.parse_date(string)
-        except ValueError as e:
-            if string.endswith(
-                "0229"
-            ):  # Occasionally dates will be on the wrong leap year
-                dt = parse_date(string[:4] + "0228", ignoretz=True)
-            try:
-                # Occasionally in USPTO dates in YYYYMMDD format,
-                # the day and month are reversed
-                return parse_date(string[:4] + string[6:8] + string[4:6], ignoretz=True)
-            except ParserError:
-                pass
-            try:
-                # Some older files have dates that are placeholders that need to be
-                # converter to real dates.
-                if "190000" in string:
-                    dt = datetime.datetime(1900, 1, 1)
-                elif string == "00000000":
-                    dt = datetime.datetime(1900, 1, 1)
-                elif string.endswith("0000"):
-                    dt = parse_date(string[:-4] + "0101", ignoretz=True)
-                elif string.endswith("00"):
-                    dt = parse_date(string[-2] + "01", ignoretz=True)
-                return None
-            except ParserError:
-                pass
-            return dt
+        return self.parse_date(string)      
+
 
 
 class Date(DateTime):

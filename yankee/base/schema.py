@@ -1,3 +1,4 @@
+from copy import deepcopy
 from yankee.util import is_valid
 
 from .deserializer import Deserializer
@@ -86,16 +87,13 @@ class ZipSchema(Schema):
 
     def bind(self, name=None, parent=None):
         super().bind(name=name, parent=parent)
-        list_fields = dict()
+        from yankee.xml import Deserializer as XmlDeserializer
         if not hasattr(self, "_keys"):
-            self._keys = {k: v.data_key for k, v in self.fields.items()}
-
-        for k, v in self.fields.items():
-            v.data_key = None
-            list_field = self._list_field(v, data_key=self._keys[k])
-            list_field.bind(k, self)
-            list_fields[k] = list_field
-        self.fields = list_fields
+            self._keys = list()
+            for f in self.fields.values():
+                generic_f = XmlDeserializer(f.data_key, f.required)
+                generic_f.bind(f.name, parent)
+                self._keys.append(generic_f)
 
     def lists_to_records(self, obj):
         keys = tuple(obj.keys())
@@ -103,5 +101,9 @@ class ZipSchema(Schema):
         return [dict(zip(keys, v)) for v in zip(*values)]
 
     def deserialize(self, raw_obj) -> "Dict":
+        elements = [f.deserialize(raw_obj) for f in self._keys]
+        import lxml.etree as ET
+        docs = list(map(list, zip(*elements)))
+
         obj = super().deserialize(raw_obj)
         return self.lists_to_records(obj)

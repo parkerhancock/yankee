@@ -15,8 +15,6 @@ doc = {
     "exists": "Something",
     "name": {"part1": "George", "part2": "Burdell"},
     "random": "Some data",
-    "first_name": ["Peter", "Parker"],
-    "age": [15, 21],
 }
 
 
@@ -57,4 +55,3 @@ def test_fields():
     assert data["exists"] == True
     assert data["doesNotExist"] == False
     assert data["name"] == "George Burdell"
-    assert data["people"][0] == {"firstName": "Peter", "age": 15}
