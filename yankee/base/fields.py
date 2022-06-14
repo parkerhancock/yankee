@@ -119,8 +119,7 @@ class Const(Field):
 class List(Field):
     many = True
 
-    def __init__(self, item_schema, data_key=None, formatter=lambda l: l, **kwargs):
-        self.formatter = formatter
+    def __init__(self, item_schema, data_key=None, **kwargs):
         self.item_schema = item_schema
         if callable(self.item_schema):
             self.item_schema = item_schema()
@@ -130,12 +129,9 @@ class List(Field):
         super().bind(name, schema)
         self.item_schema.bind(None, schema)
 
-    def deserialize(self, elem) -> "List":
-        elements = super().deserialize(elem)
-        if elements is None:
-            return list()
-        output = [self.item_schema.deserialize(e) for e in elements]
-        return self.formatter([r for r in output if is_valid(r)])
+    def load(self, obj) -> "List":
+        plucked_obj = self.get_obj(obj)
+        return [self.item_schema.load(i) for i in plucked_obj]
 
 
 # Schema-Like Fields

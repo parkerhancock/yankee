@@ -15,8 +15,16 @@ doc = {
     "exists": "Something",
     "name": {"part1": "George", "part2": "Burdell"},
     "random": "Some data",
+    "addressLine1": "1234 Anywhere",
+    "addressLine2": "Austin, TX 71234",
 }
 
+class AddressField(f.Combine):
+    addressLine1 = f.Str()
+    addressLine2 = f.Str()
+
+    def combine_func(self, obj):
+        return f"{obj['addressLine1']}\n{obj['addressLine2']}"
 
 class NameSchema(f.Combine):
     part1 = f.Str()
@@ -40,6 +48,7 @@ class ExampleSchema(Schema):
     does_not_exist = f.Exists()
     name = NameSchema()
     sub = SubSchema(False)
+    address = AddressField(False)
 
 
 def test_fields():
@@ -55,3 +64,4 @@ def test_fields():
     assert data["does_not_exist"] == False
     assert data["name"] == "George Burdell"
     assert data['sub']['string'] == "Some String Data"
+    assert data['address'] == "1234 Anywhere\nAustin, TX 71234"
