@@ -38,6 +38,7 @@ class NameSchema(Combine):
         return f"{obj['part1']} {obj['part2']}"
 class ExampleSchema(Schema):
     string = f.Str("./string")
+    other_string = f.Str("./string/text()")
     date_time = f.DT("./date_time")
     date = f.Date("./date")
     booleans = f.List(Bool, "./booleans/bool")

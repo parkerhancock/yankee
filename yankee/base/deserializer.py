@@ -49,10 +49,14 @@ class Deserializer(object):
         return DefaultPath(key)
 
     def load(self, obj):
-        plucked_obj = self.get_obj(obj)
+        pre_obj = self.pre_load(obj)
+        plucked_obj = self.get_obj(pre_obj)
         loaded_obj = self.deserialize(plucked_obj)
         return self.post_load(loaded_obj)
 
+    def pre_load(self, obj):
+        return obj
+    
     def deserialize(self, obj):
         return obj
 

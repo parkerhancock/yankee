@@ -30,4 +30,6 @@ class XmlMixin(object):
         return FastXPath(self.data_key, many=self.many, namespaces=namespaces)
 
     def to_string(self, elem):
+        if isinstance(elem, str):
+            return elem
         return "".join(elem.itertext())
