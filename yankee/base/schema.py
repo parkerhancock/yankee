@@ -1,3 +1,7 @@
+import re
+
+import lxml.etree as ET
+
 from yankee.util import camelize, underscore, is_valid
 
 from .deserializer import Deserializer
@@ -92,4 +96,26 @@ class PolymorphicSchema(Schema):
         obj = super().deserialize(obj)
         schema = self.choose_schema(obj)
         return schema.deserialize(raw_obj)
+
+class RegexSchema(Schema):
+    """
+    This schema type allows for using a regex to pull data
+    out of a string, and then treat it like a schema
+    """
+    __regex__ = None
+    
+    def __init__(self, *args, **kwargs):
+        self._regex = re.compile(self.__regex__)
+        super().__init__(*args, **kwargs)
+        
+    def deserialize(self, obj):
+        text = self.to_string(obj)
+        match = self._regex.search(text)
+        if match is None:
+            return None
+        data = self.convert_groupdict(match.groupdict())
+        return super().deserialize(data)
+    
+    def convert_groupdict(self, obj):
+        return obj
 

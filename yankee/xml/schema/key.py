@@ -1,10 +1,9 @@
-from lxml.etree import XPath
-
+import lxml.etree as ET
 
 def do_nothing(obj):
     return obj
 
-class FastXPath(XPath):
+class FastXPath(ET.XPath):
     def __init__(self, xpath, *args, many=False, **kwargs):
         self.many = many
         if many:
@@ -33,3 +32,10 @@ class XmlMixin(object):
         if isinstance(elem, str):
             return elem
         return "".join(elem.itertext())
+
+    def convert_groupdict(self, dictionary):
+        root = ET.Element("root")
+        for k, v in dictionary.items():
+            subel = ET.SubElement(root, k)
+            subel.text = v
+        return root

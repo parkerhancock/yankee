@@ -10,3 +10,6 @@ class Schema(JsonMixin, schema.Schema):
 
 class PolymorphicSchema(JsonMixin, schema.PolymorphicSchema):
     pass
+
+class RegexSchema(JsonMixin, schema.RegexSchema):
+    pass

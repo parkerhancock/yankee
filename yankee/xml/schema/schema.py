@@ -13,3 +13,6 @@ class Schema(XmlMixin, schema.Schema):
 
 class PolymorphicSchema(XmlMixin, schema.PolymorphicSchema):
     pass
+
+class RegexSchema(XmlMixin, schema.RegexSchema):
+    pass

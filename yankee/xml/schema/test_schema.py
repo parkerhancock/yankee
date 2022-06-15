@@ -5,12 +5,14 @@ import pytest
 
 from yankee.xml import Schema
 from yankee.xml import fields as f
+from yankee.xml.schema.schema import RegexSchema
 
 from .fields import *
 
 test_doc = """
 <testDoc>
     <string>Some String Data</string>
+    <regex>data_a;data_b</regex>
     <date_time>2021-05-04T12:05</date_time>
     <date>2021-05-04</date>
     <booleans>
@@ -36,6 +38,14 @@ class NameSchema(Combine):
 
     def combine_func(self, obj):
         return f"{obj['part1']} {obj['part2']}"
+
+class RegexExample(RegexSchema):
+    a = f.Str("./a")
+    b = f.Str("./b")
+    
+    __regex__ = r"(?P<a>[^;]+);(?P<b>[^;]+)"
+
+
 class ExampleSchema(Schema):
     string = f.Str("./string")
     other_string = f.Str("./string/text()")
@@ -47,6 +57,8 @@ class ExampleSchema(Schema):
     exists = f.Exists("./exists")
     does_not_exist = f.Exists("./does_not_exist")
     name = NameSchema()
+    regex = RegexExample("./regex")
+
 
 
 def test_fields():
@@ -61,6 +73,8 @@ def test_fields():
     assert data["exists"] == True
     assert data["does_not_exist"] == False
     assert data["name"] == "George Burdell"
+    assert data['regex']['a'] == 'data_a'
+    assert data['regex']['b'] == 'data_b'
 
 ns_test_doc = """
 <?xml version='1.0' encoding='UTF-8'?>
