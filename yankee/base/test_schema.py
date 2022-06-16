@@ -16,6 +16,7 @@ doc1 = {
     "random": "Some data",
     "address_line_1": "1234 Anywhere",
     "address_line_2": "Austin, TX 71234",
+    "bad_string": "",
 }
 
 def to_obj(obj):
@@ -58,6 +59,7 @@ class ExampleSchema(Schema):
     name = NameSchema()
     sub = SubSchema(False)
     address = AddressField(False)
+    bad_string = f.Str()
 
 
 def test_fields_on_dict():
@@ -74,11 +76,11 @@ def test_fields_on_dict():
     assert data["name"] == "George Burdell"
     assert data['sub']['string'] == "Some String Data"
     assert data['address'] == "1234 Anywhere\nAustin, TX 71234"
+    assert "bad_string" not in data
 
 def test_fields_on_obj():
     schema = ExampleSchema()
     data = schema.load(doc2)
-    breakpoint()
     assert data["string"] == "Some String Data"
     assert data["date_time"] == datetime.datetime(2021, 5, 4, 12, 5)
     assert data["date"] == datetime.date(2021, 5, 4)
@@ -90,3 +92,4 @@ def test_fields_on_obj():
     assert data["name"] == "George Burdell"
     assert data['sub']['string'] == "Some String Data"
     assert data['address'] == "1234 Anywhere\nAustin, TX 71234"
+    assert "bad_string" not in data

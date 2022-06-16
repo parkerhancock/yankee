@@ -33,7 +33,7 @@ def is_valid(obj):
         return False
     elif isinstance(obj, (int, float)):
         return True
-    elif isinstance(obj, (dict, list)) and len(obj) == 0:
+    elif isinstance(obj, (dict, list, str)) and len(obj) == 0:
         return False
     return True
 
