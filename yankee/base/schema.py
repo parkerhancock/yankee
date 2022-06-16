@@ -1,6 +1,6 @@
 import re
 
-from yankee.util import camelize, underscore, is_valid
+from yankee.util import camelize, underscore, is_valid, AttrDict
 
 from .deserializer import Deserializer
 
@@ -61,7 +61,7 @@ class Schema(Deserializer):
             return name
 
     def deserialize(self, obj) -> "Dict":
-        output = dict()
+        output = AttrDict()
         for key, field in self.fields.items():
             value = field.load(obj)
             # If there is no value, don't include anything in the output dictionary

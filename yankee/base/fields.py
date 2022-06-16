@@ -6,7 +6,7 @@ import copy
 
 from dateutil.parser import parse as parse_dt, isoparse
 
-from yankee.util import clean_whitespace, is_valid
+from yankee.util import AttrDict, clean_whitespace, is_valid
 
 from .deserializer import Deserializer
 from .schema import Schema
@@ -145,7 +145,7 @@ class Dict(List):
     
     def deserialize(self, obj):
         obj = super().deserialize(obj)
-        return {self.key.load(i):self.value.load(i) for i in obj}
+        return AttrDict((self.key.load(i), self.value.load(i)) for i in obj)
 
 # String Parsing Fields
 

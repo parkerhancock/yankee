@@ -112,6 +112,7 @@ def test_fields():
         {"first_name": "Peter", "last_name": "Parker"}
     ]
     assert data['comment'] == "A Comment"
+    assert data.string == "Some String Data"
 
 ns_test_doc = """
 <?xml version='1.0' encoding='UTF-8'?>
