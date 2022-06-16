@@ -80,7 +80,7 @@ class Boolean(String):
 
     def deserialize(self, elem) -> "Optional[bool]":
         string = super(Boolean, self).deserialize(elem)
-        if string is None:
+        if string is None or string == '':
             return None if self.allow_none else False
         if not self.case_sensitive:
             string = string.lower()
@@ -131,7 +131,8 @@ class List(Field):
 
     def load(self, obj) -> "List":
         plucked_obj = self.get_obj(obj)
-        return [self.item_schema.load(i) for i in plucked_obj]
+        objs = (self.item_schema.load(i) for i in plucked_obj)
+        return [o for o in objs if is_valid(o)]
 
 
 # Schema-Like Fields

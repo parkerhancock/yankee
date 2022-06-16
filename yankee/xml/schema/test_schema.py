@@ -20,6 +20,7 @@ test_doc = """
         <bool>true</bool>
         <bool>False</bool>
         <bool>false</bool>
+        <bool/>
     </booleans>
     <float>1.234</float>
     <int>23</int>
