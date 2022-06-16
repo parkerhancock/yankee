@@ -130,11 +130,9 @@ class List(Field):
         super().bind(name, schema)
         self.item_schema.bind(None, schema)
 
-    def load(self, obj) -> "List":
-        plucked_obj = self.get_obj(obj)
-        loaded_obj = (self.item_schema.load(i) for i in plucked_obj)
-        loaded_obj = [o for o in loaded_obj if is_valid(o)]
-        return self.post_load(loaded_obj)
+    def deserialize(self, obj):
+        obj_gen = (self.item_schema.load(i) for i in obj)
+        return [o for o in obj_gen if is_valid(o)]
 
 class DelimitedString(String):
     def __init__(self, item_schema, data_key=None, delimeter=",", **kwargs):
