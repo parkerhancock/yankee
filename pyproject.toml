@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "yankee"
-version = "0.1.20"
+version = "0.1.21"
 description = "lightweight, simple, and fast declarative XML and JSON data extraction"
 authors = ["Parker Hancock <633163+parkerhancock@users.noreply.github.com>"]
 license = "Apache Software License 2.0"
