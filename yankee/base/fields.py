@@ -133,7 +133,7 @@ class List(Field):
         obj_gen = (self.item_schema.load(i) for i in obj)
         return [o for o in obj_gen if is_valid(o)]
 
-class Dict(List):
+class Dictionary(List):
     """Converts a list of items into a dictionary based on
     the key and value fields passed to it.
     """
@@ -233,3 +233,11 @@ class ZipSchema(Schema):
         keys = tuple(obj.keys())
         values = tuple(obj.values())
         return [dict(zip(keys, v)) for v in zip(*values)]
+
+# Aliases
+Str = String
+DT = DateTime
+Bool = Boolean
+Int = Integer
+Alt = Alternative
+Dict = Dictionary
