@@ -3,9 +3,8 @@ import datetime
 import lxml.etree as ET
 import pytest
 
-from yankee.xml import Schema
+from yankee.xml import Schema, RegexSchema
 from yankee.xml import fields as f
-from yankee.xml.schema.schema import RegexSchema
 
 from .fields import *
 
@@ -29,11 +28,29 @@ test_doc = """
     <part2>Burdell</part2>
     <random>Some data</random>
     <csv>name1,name2,name3</csv>
+    <dict>
+        <item name="key1">value1</item>
+        <item name="key2">value2</item>
+    </dict>
+    <zip>
+        <first_name>
+            <name>Parker</name>
+            <name>Peter</name>
+        </first_name>
+        <last_name>
+            <name>Hancock</name>
+            <name>Parker</name>
+        </last_name>
+    </zip>
 </testDoc>
 """.strip()
 
 
 tree = ET.fromstring(test_doc.encode())
+
+class NameZipSchema(f.ZipSchema):
+    first_name = f.Str("./zip/first_name/name")
+    last_name = f.Str("./zip/last_name/name")
 class NameSchema(Combine):
     part1 = f.Str("./part1")
     part2 = f.Str("./part2")
@@ -63,6 +80,8 @@ class ExampleSchema(Schema):
     bad_regex = RegexExample("./missing")
     gone = f.Str("./nonexistent_path")
     csv = f.DelimitedString(f.Str(), data_key="./csv", delimeter=",")
+    dict = f.Dict("./dict/item", key=f.Str(".//@name"), value=f.Str())
+    zip = NameZipSchema()
 
 
 
@@ -82,6 +101,14 @@ def test_fields():
     assert data['regex']['b'] == 'data_b'
     assert 'gone' not in data
     assert data['csv'] == ['name1', 'name2', 'name3']
+    assert data['dict'] == {
+        "key1": "value1",
+        "key2": "value2",
+    }
+    assert data['zip'] == [
+        {"first_name": "Parker", "last_name": "Hancock"},
+        {"first_name": "Peter", "last_name": "Parker"}
+    ]
 
 ns_test_doc = """
 <?xml version='1.0' encoding='UTF-8'?>

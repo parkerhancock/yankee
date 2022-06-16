@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime
 import re
+import copy
 
 from dateutil.parser import parse as parse_dt, isoparse
 
@@ -114,17 +115,15 @@ class Const(Field):
         return self.const
 
 
-# Multiple Value Field
-
-
+# Multiple Value Fields
 class List(Field):
     many = True
 
-    def __init__(self, item_schema, data_key=None, **kwargs):
+    def __init__(self, item_schema, data_key, **kwargs):
         self.item_schema = item_schema
         if callable(self.item_schema):
             self.item_schema = item_schema()
-        super().__init__(data_key=data_key, **kwargs)
+        super().__init__(data_key, **kwargs)
 
     def bind(self, name=None, schema=None):
         super().bind(name, schema)
@@ -133,6 +132,22 @@ class List(Field):
     def deserialize(self, obj):
         obj_gen = (self.item_schema.load(i) for i in obj)
         return [o for o in obj_gen if is_valid(o)]
+
+class Dict(List):
+    """Converts a list of items into a dictionary based on
+    the key and value fields passed to it.
+    """
+    
+    def __init__(self, data_key, key:Field, value:Field, **kwargs):
+        self.key = key
+        self.value = value
+        return super().__init__(Field(), data_key, **kwargs)
+    
+    def deserialize(self, obj):
+        obj = super().deserialize(obj)
+        return {self.key.load(i):self.value.load(i) for i in obj}
+
+# String Parsing Fields
 
 class DelimitedString(String):
     def __init__(self, item_schema, data_key=None, delimeter=",", **kwargs):
@@ -158,7 +173,6 @@ class DelimitedString(String):
 
 
 # Schema-Like Fields
-
 
 class Combine(Schema):
     """Can have fields like a schema that are then
@@ -187,7 +201,7 @@ class Alternative(Schema):
         return next((v for v in obj.values() if is_valid(v)), None)
 
 
-class Zip(Schema):
+class ZipSchema(Schema):
     _list_field = List
     """Sometimes data is provided as a bunch of arrays, like:
     {
@@ -198,13 +212,24 @@ class Zip(Schema):
     This field performs that step:
     """
 
+    def bind(self, name=None, parent=None):
+        super().bind(name, parent)
+        zip_fields = dict()
+        for k, v in self.fields.items():
+            v_copy = copy.deepcopy(v)
+            # Remove the data key
+            data_key = v_copy.data_key
+            v_copy.data_key = None
+            # Place it on the list field
+            zip_fields[k] = self._list_field(v_copy, data_key)
+        self.unzip_fields = self.fields
+        self.fields = zip_fields
 
-
+    def deserialize(self, obj) -> "Dict":
+        objs = super().deserialize(obj)
+        return self.lists_to_records(objs)
+    
     def lists_to_records(self, obj):
         keys = tuple(obj.keys())
         values = tuple(obj.values())
         return [dict(zip(keys, v)) for v in zip(*values)]
-
-    def deserialize(self, raw_obj) -> "Dict":
-        obj = super().deserialize(raw_obj)
-        return self.lists_to_records(obj)

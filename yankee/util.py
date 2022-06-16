@@ -29,7 +29,13 @@ def camelize(string: str) -> str:
 
 
 def is_valid(obj):
-    return obj or isinstance(obj, (int, float))
+    if obj is None:
+        return False
+    elif isinstance(obj, (int, float)):
+        return True
+    elif isinstance(obj, (dict, list)) and len(obj) == 0:
+        return False
+    return True
 
 
 # Cleans whitespace from text data

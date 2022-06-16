@@ -42,6 +42,8 @@ class Const(XmlMixin, fields.Const):
 class List(XmlMixin, fields.List):
     pass
 
+class Dict(XmlMixin, fields.Dict):
+    pass
 
 class Combine(XmlMixin, fields.Combine):
     pass
@@ -51,7 +53,7 @@ class Alternative(XmlMixin, fields.Alternative):
     pass
 
 
-class Zip(XmlMixin, fields.Zip):
+class ZipSchema(XmlMixin, fields.ZipSchema):
     _list_field = List
 
 class DelimitedString(XmlMixin, fields.DelimitedString):

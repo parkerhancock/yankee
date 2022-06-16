@@ -1,7 +1,6 @@
 from yankee.base import schema
 from yankee.base.deserializer import Deserializer
 
-from .fields import List
 from .key import XmlMixin
 
 class Deserializer(XmlMixin, Deserializer):
@@ -13,6 +12,7 @@ class Schema(XmlMixin, schema.Schema):
 
 class PolymorphicSchema(XmlMixin, schema.PolymorphicSchema):
     pass
+
 
 class RegexSchema(XmlMixin, schema.RegexSchema):
     pass

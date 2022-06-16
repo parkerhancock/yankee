@@ -1,10 +1,10 @@
 import re
-
-import lxml.etree as ET
+import copy
 
 from yankee.util import camelize, underscore, is_valid
 
 from .deserializer import Deserializer
+from . import fields as f
 
 
 
@@ -72,7 +72,7 @@ class Schema(Deserializer):
                     return dict()
                 continue
             # If the value isn't a dict, or there's not flatten directive, add and continue
-            if not isinstance(value, dict) or not field.flatten:
+            if not isinstance(value, dict) or not getattr(field, "flatten", False):
                 output[key] = value
                 continue
             # Merge in flattened fields
@@ -120,4 +120,3 @@ class RegexSchema(Schema):
     
     def convert_groupdict(self, obj):
         return obj
-
