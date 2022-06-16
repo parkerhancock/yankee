@@ -9,7 +9,7 @@ from yankee.xml import fields as f
 from .fields import *
 
 test_doc = """
-<testDoc>
+<testdoc>
     <string>Some String Data</string>
     <regex>data_a;data_b</regex>
     <date_time>2021-05-04T12:05</date_time>
@@ -21,6 +21,7 @@ test_doc = """
         <bool>false</bool>
         <bool/>
     </booleans>
+    <!-- A Comment -->
     <float>1.234</float>
     <int>23</int>
     <exists>Something</exists>
@@ -42,7 +43,7 @@ test_doc = """
             <name>Parker</name>
         </last_name>
     </zip>
-</testDoc>
+</testdoc>
 """.strip()
 
 
@@ -52,8 +53,8 @@ class NameZipSchema(f.ZipSchema):
     first_name = f.Str("./zip/first_name/name")
     last_name = f.Str("./zip/last_name/name")
 class NameSchema(Combine):
-    part1 = f.Str("./part1")
-    part2 = f.Str("./part2")
+    part1 = f.Str(".//part1")
+    part2 = f.Str(".//part2")
 
     def combine_func(self, obj):
         return f"{obj['part1']} {obj['part2']}"
@@ -66,6 +67,7 @@ class RegexExample(RegexSchema):
 
 
 class ExampleSchema(Schema):
+    comment = f.Str("./comment()")
     string = f.Str("./string")
     other_string = f.Str("./string/text()")
     date_time = f.DT("./date_time")
@@ -109,6 +111,7 @@ def test_fields():
         {"first_name": "Parker", "last_name": "Hancock"},
         {"first_name": "Peter", "last_name": "Parker"}
     ]
+    assert data['comment'] == "A Comment"
 
 ns_test_doc = """
 <?xml version='1.0' encoding='UTF-8'?>

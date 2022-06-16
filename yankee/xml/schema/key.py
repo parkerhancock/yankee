@@ -44,7 +44,11 @@ class XmlMixin(object):
     def to_string(self, elem):
         if isinstance(elem, str):
             return elem
-        return "".join(elem.itertext())
+        try:
+            return "".join(elem.itertext())
+        except ValueError:
+            # Occasionally elements won't have itertext available
+            return elem.text
 
     def convert_groupdict(self, dictionary):
         root = ET.Element("root")

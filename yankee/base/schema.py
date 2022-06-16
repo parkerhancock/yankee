@@ -1,10 +1,8 @@
 import re
-import copy
 
 from yankee.util import camelize, underscore, is_valid
 
 from .deserializer import Deserializer
-from . import fields as f
 
 
 
