@@ -132,8 +132,9 @@ class List(Field):
 
     def load(self, obj) -> "List":
         plucked_obj = self.get_obj(obj)
-        objs = (self.item_schema.load(i) for i in plucked_obj)
-        return [o for o in objs if is_valid(o)]
+        loaded_obj = (self.item_schema.load(i) for i in plucked_obj)
+        loaded_obj = [o for o in loaded_obj if is_valid(o)]
+        return self.post_load(loaded_obj)
 
 class DelimitedString(String):
     def __init__(self, item_schema, data_key=None, delimeter=",", **kwargs):
