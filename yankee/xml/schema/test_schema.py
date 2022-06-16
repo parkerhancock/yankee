@@ -28,6 +28,7 @@ test_doc = """
     <part1>George</part1>
     <part2>Burdell</part2>
     <random>Some data</random>
+    <csv>name1,name2,name3</csv>
 </testDoc>
 """.strip()
 
@@ -61,6 +62,7 @@ class ExampleSchema(Schema):
     regex = RegexExample("./regex")
     bad_regex = RegexExample("./missing")
     gone = f.Str("./nonexistent_path")
+    csv = f.DelimitedString(f.Str(), data_key="./csv", delimeter=",")
 
 
 
@@ -79,6 +81,7 @@ def test_fields():
     assert data['regex']['a'] == 'data_a'
     assert data['regex']['b'] == 'data_b'
     assert 'gone' not in data
+    assert data['csv'] == ['name1', 'name2', 'name3']
 
 ns_test_doc = """
 <?xml version='1.0' encoding='UTF-8'?>

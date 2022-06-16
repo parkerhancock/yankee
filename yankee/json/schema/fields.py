@@ -54,6 +54,9 @@ class Alternative(JsonMixin, fields.Alternative):
 class Zip(JsonMixin, fields.Zip):
     _list_field = List
 
+class DelimitedString(JsonMixin, fields.DelimitedString):
+    pass
+
 
 # Aliases
 Str = String

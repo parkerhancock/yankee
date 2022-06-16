@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+import re
 
 from dateutil.parser import parse as parse_dt, isoparse
 
@@ -133,6 +134,28 @@ class List(Field):
         plucked_obj = self.get_obj(obj)
         objs = (self.item_schema.load(i) for i in plucked_obj)
         return [o for o in objs if is_valid(o)]
+
+class DelimitedString(String):
+    def __init__(self, item_schema, data_key=None, delimeter=",", **kwargs):
+        self.item_schema = item_schema
+        if not isinstance(delimeter, re.Pattern):
+            delimeter = re.compile(delimeter)
+        self.delimeter = delimeter
+        if callable(self.item_schema):
+            self.item_schema = item_schema()
+        super().__init__(data_key=data_key, **kwargs)
+
+    def bind(self, name=None, schema=None):
+        super().bind(name, schema)
+        self.item_schema.bind(None, schema)
+
+    def deserialize(self, obj):
+        obj = super().deserialize(obj)
+        if obj is None:
+            return None
+        objs = (self.item_schema.load(o) for o in self.delimeter.split(obj))
+        return [o for o in objs if is_valid(o)]
+
 
 
 # Schema-Like Fields

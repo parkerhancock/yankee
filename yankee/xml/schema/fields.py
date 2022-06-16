@@ -54,6 +54,9 @@ class Alternative(XmlMixin, fields.Alternative):
 class Zip(XmlMixin, fields.Zip):
     _list_field = List
 
+class DelimitedString(XmlMixin, fields.DelimitedString):
+    pass
+
 
 # Aliases
 Str = String
