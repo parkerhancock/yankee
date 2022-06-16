@@ -59,6 +59,8 @@ class ExampleSchema(Schema):
     does_not_exist = f.Exists("./does_not_exist")
     name = NameSchema()
     regex = RegexExample("./regex")
+    bad_regex = RegexExample("./missing")
+    gone = f.Str("./nonexistent_path")
 
 
 
@@ -76,6 +78,7 @@ def test_fields():
     assert data["name"] == "George Burdell"
     assert data['regex']['a'] == 'data_a'
     assert data['regex']['b'] == 'data_b'
+    assert 'gone' not in data
 
 ns_test_doc = """
 <?xml version='1.0' encoding='UTF-8'?>

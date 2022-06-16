@@ -109,6 +109,8 @@ class RegexSchema(Schema):
         super().__init__(*args, **kwargs)
         
     def deserialize(self, obj):
+        if obj is None:
+            return None
         text = self.to_string(obj)
         match = self._regex.search(text)
         if match is None:
