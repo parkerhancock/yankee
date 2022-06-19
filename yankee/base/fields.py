@@ -32,7 +32,7 @@ class String(Field):
 
     def deserialize(self, elem) -> "Optional[str]":
         elem = super().deserialize(elem)
-        if elem is None:
+        if elem is None or elem == "":
             return None
         else:
             return self.formatter(self.to_string(elem))
@@ -119,7 +119,7 @@ class Const(Field):
 class List(Field):
     many = True
 
-    def __init__(self, item_schema, data_key, **kwargs):
+    def __init__(self, item_schema, data_key=None, **kwargs):
         self.item_schema = item_schema
         if callable(self.item_schema):
             self.item_schema = item_schema()
