@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import datetime
+import re
+import copy
 
-from dateutil.parser import parse as parse_date
-from dateutil.parser._parser import ParserError
+from dateutil.parser import parse as parse_dt, isoparse
 
-from yankee.util import clean_whitespace, is_valid
+from yankee.util import AttrDict, clean_whitespace, is_valid
 
 from .deserializer import Deserializer
 from .schema import Schema
@@ -17,12 +18,11 @@ class Field(Deserializer):
         self.required = required
 
     def deserialize(self, obj):
-        result = super().deserialize(obj)
-        if result is None and self.required:
+        if obj is None and self.required:
             raise ValueError(
                 f"Field {self.name} is required! Key {self.key} not found in {obj}"
             )
-        return result
+        return obj
 
 
 class String(Field):
@@ -32,12 +32,12 @@ class String(Field):
 
     def deserialize(self, elem) -> "Optional[str]":
         elem = super().deserialize(elem)
-        if elem is None:
+        if elem is None or elem == "":
             return None
         else:
             return self.formatter(self.to_string(elem))
 
-    def to_string(self, elem):
+    def to_string(self, elem): # Abstracted out since XML requires a function call
         return str(elem)
 
 
@@ -47,42 +47,20 @@ class DateTime(String):
     ):
         super().__init__(data_key, required, attr, formatter)
         if dt_format:
-            self.parse_date = lambda s: datetime.datetime.strftime(s, dt_format)
-        else:
-            self.parse_date = lambda s: datetime.datetime.fromisoformat(s)
+            self.parse_date = lambda s: datetime.datetime.strptime(s, dt_format)
+
+    def parse_date(self, text:str):
+        try:
+            return isoparse(text)
+        except ValueError:
+            return parse_dt(text)
 
     def deserialize(self, elem) -> "Optional[datetime.datetime]":
         string = super(DateTime, self).deserialize(elem)
         if not string:
             return None
-        try:
-            return self.parse_date(string)
-        except ValueError as e:
-            if string.endswith(
-                "0229"
-            ):  # Occasionally dates will be on the wrong leap year
-                dt = parse_date(string[:4] + "0228", ignoretz=True)
-            try:
-                # Occasionally in USPTO dates in YYYYMMDD format,
-                # the day and month are reversed
-                return parse_date(string[:4] + string[6:8] + string[4:6], ignoretz=True)
-            except ParserError:
-                pass
-            try:
-                # Some older files have dates that are placeholders that need to be
-                # converter to real dates.
-                if "190000" in string:
-                    dt = datetime.datetime(1900, 1, 1)
-                elif string == "00000000":
-                    dt = datetime.datetime(1900, 1, 1)
-                elif string.endswith("0000"):
-                    dt = parse_date(string[:-4] + "0101", ignoretz=True)
-                elif string.endswith("00"):
-                    dt = parse_date(string[-2] + "01", ignoretz=True)
-                return None
-            except ParserError:
-                pass
-            return dt
+        return self.parse_date(string)      
+
 
 
 class Date(DateTime):
@@ -104,7 +82,7 @@ class Boolean(String):
 
     def deserialize(self, elem) -> "Optional[bool]":
         string = super(Boolean, self).deserialize(elem)
-        if string is None:
+        if string is None or string == '':
             return None if self.allow_none else False
         if not self.case_sensitive:
             string = string.lower()
@@ -137,49 +115,79 @@ class Const(Field):
         return self.const
 
 
-# Multiple Value Field
-
-
+# Multiple Value Fields
 class List(Field):
     many = True
 
-    def __init__(self, item_schema, data_key=None, formatter=lambda l: l, **kwargs):
-        super().__init__(data_key=data_key, **kwargs)
-        self.formatter = formatter
+    def __init__(self, item_schema, data_key=None, **kwargs):
         self.item_schema = item_schema
         if callable(self.item_schema):
             self.item_schema = item_schema()
+        super().__init__(data_key, **kwargs)
 
-    def bind(self, name, schema):
+    def bind(self, name=None, schema=None):
         super().bind(name, schema)
         self.item_schema.bind(None, schema)
 
-    def deserialize(self, elem) -> "List":
-        elements = super().deserialize(elem)
-        if elements is None:
-            return list()
-        output = [self.item_schema.deserialize(e) for e in elements]
-        return self.formatter([r for r in output if is_valid(r)])
+    def deserialize(self, obj):
+        obj_gen = (self.item_schema.load(i) for i in obj)
+        return [o for o in obj_gen if is_valid(o)]
+
+class Dictionary(List):
+    """Converts a list of items into a dictionary based on
+    the key and value fields passed to it.
+    """
+    
+    def __init__(self, data_key, key:Field, value:Field, **kwargs):
+        self.key = key
+        self.value = value
+        return super().__init__(Field(), data_key, **kwargs)
+    
+    def deserialize(self, obj):
+        obj = super().deserialize(obj)
+        return AttrDict((self.key.load(i), self.value.load(i)) for i in obj)
+
+# String Parsing Fields
+
+class DelimitedString(String):
+    def __init__(self, item_schema, data_key=None, delimeter=",", **kwargs):
+        self.item_schema = item_schema
+        if not isinstance(delimeter, re.Pattern):
+            delimeter = re.compile(delimeter)
+        self.delimeter = delimeter
+        if callable(self.item_schema):
+            self.item_schema = item_schema()
+        super().__init__(data_key=data_key, **kwargs)
+
+    def bind(self, name=None, schema=None):
+        super().bind(name, schema)
+        self.item_schema.bind(None, schema)
+
+    def deserialize(self, obj):
+        obj = super().deserialize(obj)
+        if obj is None:
+            return None
+        objs = (self.item_schema.load(o) for o in self.delimeter.split(obj))
+        return [o for o in objs if is_valid(o)]
+
 
 
 # Schema-Like Fields
-
 
 class Combine(Schema):
     """Can have fields like a schema that are then
     passed as an object to a combine function that
     transforms it to a single string value"""
+ 
 
-    def bind(self, name=None, parent=None):
-        super().bind(name, parent)
-        for name, field in self.fields.items():
-            field.bind(name, self)
+    def get_output_name(self, name):
+        return name
 
     def combine_func(self, obj):
         raise NotImplementedError("Must be implemented in subclass")
 
-    def deserialize(self, et_elem) -> "Optional[str]":
-        obj = super().deserialize(et_elem)
+    def deserialize(self, raw_obj) -> "Optional[str]":
+        obj = super().deserialize(raw_obj)
         return self.combine_func(obj)
 
 
@@ -193,7 +201,7 @@ class Alternative(Schema):
         return next((v for v in obj.values() if is_valid(v)), None)
 
 
-class Zip(Schema):
+class ZipSchema(Schema):
     _list_field = List
     """Sometimes data is provided as a bunch of arrays, like:
     {
@@ -205,23 +213,31 @@ class Zip(Schema):
     """
 
     def bind(self, name=None, parent=None):
-        super().bind(name=name, parent=parent)
-        list_fields = dict()
-        if not hasattr(self, "_keys"):
-            self._keys = {k: v.data_key for k, v in self.fields.items()}
-
+        super().bind(name, parent)
+        zip_fields = dict()
         for k, v in self.fields.items():
-            v.data_key = None
-            list_field = self._list_field(v, data_key=self._keys[k])
-            list_field.bind(k, self)
-            list_fields[k] = list_field
-        self.fields = list_fields
+            v_copy = copy.deepcopy(v)
+            # Remove the data key
+            data_key = v_copy.data_key
+            v_copy.data_key = None
+            # Place it on the list field
+            zip_fields[k] = self._list_field(v_copy, data_key)
+        self.unzip_fields = self.fields
+        self.fields = zip_fields
 
+    def deserialize(self, obj) -> "Dict":
+        objs = super().deserialize(obj)
+        return self.lists_to_records(objs)
+    
     def lists_to_records(self, obj):
         keys = tuple(obj.keys())
         values = tuple(obj.values())
         return [dict(zip(keys, v)) for v in zip(*values)]
 
-    def deserialize(self, raw_obj) -> "Dict":
-        obj = super().deserialize(raw_obj)
-        return self.lists_to_records(obj)
+# Aliases
+Str = String
+DT = DateTime
+Bool = Boolean
+Int = Integer
+Alt = Alternative
+Dict = Dictionary

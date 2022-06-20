@@ -1,11 +1,25 @@
-from yankee.util import is_valid
+import re
+
+from yankee.util import camelize, underscore, is_valid, AttrDict
 
 from .deserializer import Deserializer
 
 
+
+def inflect(string, style=None):
+    try:
+        if style is None:
+            return string
+        elif style == "json":
+            return camelize(string)
+        elif style == "python":
+            return underscore(string)
+    except Exception:
+        return None
+
 class Schema(Deserializer):
     class Meta:
-        output_style = None
+        output_style = "python"
 
     def __init__(
         self,
@@ -13,13 +27,10 @@ class Schema(Deserializer):
         flatten=False,
         prefix=False,
         required=False,
-        output_style=None,
     ):
-        super().__init__(data_key, required, output_style)
-        self.Meta.output_style = output_style
         self.flatten = flatten
         self.prefix = prefix
-        self.bind()
+        super().__init__(data_key, required)
 
     def bind(self, name=None, parent=None):
         super().bind(name, parent)
@@ -29,26 +40,38 @@ class Schema(Deserializer):
             class_fields += [
                 (k, v) for k, v in c.__dict__.items() if isinstance(v, Deserializer)
             ]
-        self.fields = dict(class_fields)
-        for name, field in self.fields.items():
-            if self.prefix:
-                field.bind(f"{self.name}_{name}", self)
-            else:
-                field.bind(name, self)
+        fields = dict(class_fields)
+        for name, field in fields.items():
+            field.bind(name, self)
+        self.fields = {self.get_output_name(k): v for k, v in fields.items()}
 
-    def deserialize(self, raw_obj) -> "Dict":
-        obj = super().deserialize(raw_obj)
-        output = dict()
-        for field in self.fields.values():
-            value = field.deserialize(obj)
+    def get_output_name(self, name):
+        output_style = getattr(self.Meta, "output_style", None)
+        if output_style == None:
+            return name
+        elif output_style == "json":
+            name = camelize(name)
+            if self.prefix:
+                return camelize(self.name) + name[0].upper() + name[1:]
+            return name
+        elif output_style == "python":
+            name = underscore(name)
+            if self.prefix:
+                return underscore(self.name) + "_" + name
+            return name
+
+    def deserialize(self, obj) -> "Dict":
+        output = AttrDict()
+        for key, field in self.fields.items():
+            value = field.load(obj)
             # If there is no value, don't include anything in the output dictionary
             if not is_valid(value):
                 if field.required == True:
                     return dict()
                 continue
             # If the value isn't a dict, or there's not flatten directive, add and continue
-            if not isinstance(value, dict) or not field.flatten:
-                output[field.output_name] = value
+            if not isinstance(value, dict) or not getattr(field, "flatten", False):
+                output[key] = value
                 continue
             # Merge in flattened fields
             output.update(value)
@@ -72,36 +95,26 @@ class PolymorphicSchema(Schema):
         schema = self.choose_schema(obj)
         return schema.deserialize(raw_obj)
 
-
-class ZipSchema(Schema):
-    _list_field = None
-    """Sometimes data is provided as a bunch of arrays, like:
-    {
-        "name": ["Peter", "Parker"],
-        "age": [15, 25],
-    }
-    and we want to build out complete records from this data.
-    This field performs that step:
+class RegexSchema(Schema):
     """
-
-    def bind(self, name=None, parent=None):
-        super().bind(name=name, parent=parent)
-        list_fields = dict()
-        if not hasattr(self, "_keys"):
-            self._keys = {k: v.data_key for k, v in self.fields.items()}
-
-        for k, v in self.fields.items():
-            v.data_key = None
-            list_field = self._list_field(v, data_key=self._keys[k])
-            list_field.bind(k, self)
-            list_fields[k] = list_field
-        self.fields = list_fields
-
-    def lists_to_records(self, obj):
-        keys = tuple(obj.keys())
-        values = tuple(obj.values())
-        return [dict(zip(keys, v)) for v in zip(*values)]
-
-    def deserialize(self, raw_obj) -> "Dict":
-        obj = super().deserialize(raw_obj)
-        return self.lists_to_records(obj)
+    This schema type allows for using a regex to pull data
+    out of a string, and then treat it like a schema
+    """
+    __regex__ = None
+    
+    def __init__(self, *args, **kwargs):
+        self._regex = re.compile(self.__regex__)
+        super().__init__(*args, **kwargs)
+        
+    def deserialize(self, obj):
+        if obj is None:
+            return None
+        text = self.to_string(obj)
+        match = self._regex.search(text)
+        if match is None:
+            return None
+        data = self.convert_groupdict(match.groupdict())
+        return super().deserialize(data)
+    
+    def convert_groupdict(self, obj):
+        return obj

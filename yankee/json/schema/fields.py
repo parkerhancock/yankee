@@ -38,21 +38,23 @@ class Exists(JsonMixin, fields.Exists):
 class Const(JsonMixin, fields.Const):
     pass
 
-
 class List(JsonMixin, fields.List):
     pass
 
+class Dict(JsonMixin, fields.Dict):
+    pass
 
 class Combine(JsonMixin, fields.Combine):
     pass
 
-
 class Alternative(JsonMixin, fields.Alternative):
     pass
 
-
-class Zip(JsonMixin, fields.Zip):
+class ZipSchema(JsonMixin, fields.ZipSchema):
     _list_field = List
+
+class DelimitedString(JsonMixin, fields.DelimitedString):
+    pass
 
 
 # Aliases
