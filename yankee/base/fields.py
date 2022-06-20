@@ -13,21 +13,11 @@ from .schema import Schema
 
 
 class Field(Deserializer):
-    def __init__(self, data_key=None, required=False, many=False):
-        super().__init__(data_key=data_key, required=required)
-        self.required = required
-
-    def deserialize(self, obj):
-        if obj is None and self.required:
-            raise ValueError(
-                f"Field {self.name} is required! Key {self.key} not found in {obj}"
-            )
-        return obj
-
+    pass
 
 class String(Field):
-    def __init__(self, data_key=None, required=False, attr=None, formatter=None):
-        super().__init__(data_key, required)
+    def __init__(self, *args, formatter=None, **kwargs):
+        super().__init__(*args, **kwargs)
         self.formatter = formatter or clean_whitespace
 
     def deserialize(self, elem) -> "Optional[str]":
@@ -42,10 +32,8 @@ class String(Field):
 
 
 class DateTime(String):
-    def __init__(
-        self, data_key=None, required=False, attr=None, formatter=None, dt_format=None
-    ):
-        super().__init__(data_key, required, attr, formatter)
+    def __init__(self, *args, dt_format=None, **kwargs):
+        super().__init__(*args, **kwargs)
         if dt_format:
             self.parse_date = lambda s: datetime.datetime.strptime(s, dt_format)
 
@@ -117,9 +105,8 @@ class Const(Field):
 
 # Multiple Value Fields
 class List(Field):
-    many = True
-
     def __init__(self, item_schema, data_key=None, **kwargs):
+        kwargs['many'] = True
         self.item_schema = item_schema
         if callable(self.item_schema):
             self.item_schema = item_schema()
