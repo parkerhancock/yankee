@@ -50,8 +50,9 @@ test_doc = """
 tree = ET.fromstring(test_doc.encode())
 
 class NameZipSchema(f.ZipSchema):
-    first_name = f.Str("./zip/first_name/name")
-    last_name = f.Str("./zip/last_name/name")
+    first_name = f.Str(".//first_name/name")
+    last_name = f.Str(".//last_name/name")
+
 class NameSchema(Combine):
     part1 = f.Str(".//part1")
     part2 = f.Str(".//part2")
@@ -83,7 +84,7 @@ class ExampleSchema(Schema):
     gone = f.Str("./nonexistent_path")
     csv = f.DelimitedString(f.Str(), data_key="./csv", delimeter=",")
     dict = f.Dict("./dict/item", key=f.Str(".//@name"), value=f.Str())
-    zip = NameZipSchema()
+    zip = NameZipSchema("./zip")
 
 
 def test_element_filter():

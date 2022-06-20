@@ -1,4 +1,4 @@
-from yankee.util import do_nothing
+from yankee.util import do_nothing, update_class
 from collections.abc import Mapping, Sequence
 
 
@@ -81,15 +81,15 @@ class Deserializer(object):
         self.name = name
         self.parent = parent
         if self.parent is not None:
-            self.Meta = parent.Meta
-        self.accessor = self.make_accessor()
+            update_class(self.Meta, parent.Meta)
+        self.accessor = self.make_accessor(self.data_key, self.name, self.many, self.filter)
         return self
 
-    def make_accessor(self):
-        if self.data_key == False:
+    def make_accessor(self, data_key, name, many, filter):
+        if data_key == False:
             return do_nothing
-        key = self.data_key or self.name
-        return DefaultAccessor(key, many=self.many, filter=self.filter)
+        key = data_key or name
+        return DefaultAccessor(key, many=many, filter=filter)
 
     def load(self, obj):
         pre_obj = self.pre_load(obj)
@@ -111,17 +111,4 @@ class Deserializer(object):
         return obj
 
     def get_obj(self, obj):
-        if self.many:
-            if obj is None:
-                return list()
-            plucked_obj = self.accessor(obj)
-            if not isinstance(plucked_obj, list):
-                raise ValueError("Key Function returned single result rather than list!")
-            return plucked_obj
-        else:
-            if obj is None:
-                return None
-            plucked_obj = self.accessor(obj)
-            if isinstance(plucked_obj, list):
-                raise ValueError("Key Function returned list of results!")
-            return plucked_obj
+        return self.accessor(obj)

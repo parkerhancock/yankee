@@ -23,14 +23,14 @@ class Schema(Deserializer):
 
     def __init__(
         self,
-        data_key=None,
+        *args,
         flatten=False,
         prefix=False,
-        required=False,
+        **kwargs
     ):
         self.flatten = flatten
         self.prefix = prefix
-        super().__init__(data_key, required)
+        super().__init__(*args, **kwargs)
 
     def bind(self, name=None, parent=None):
         super().bind(name, parent)

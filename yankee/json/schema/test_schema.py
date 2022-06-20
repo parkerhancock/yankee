@@ -78,5 +78,3 @@ def test_filter_field():
     
     result = ExampleSchema().load(doc)
     assert result['el_type'] == "el2"
-
-    

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+import itertools
 import re
 import copy
 
@@ -198,28 +199,26 @@ class ZipSchema(Schema):
     and we want to build out complete records from this data.
     This field performs that step:
     """
-
     def bind(self, name=None, parent=None):
         super().bind(name, parent)
-        zip_fields = dict()
+        self.zip_keys = list()
+        self.zip_accessors = list()
         for k, v in self.fields.items():
-            v_copy = copy.deepcopy(v)
-            # Remove the data key
-            data_key = v_copy.data_key
-            v_copy.data_key = None
-            # Place it on the list field
-            zip_fields[k] = self._list_field(v_copy, data_key)
-        self.unzip_fields = self.fields
-        self.fields = zip_fields
+            self.zip_keys.append(k)
+            self.zip_accessors.append(self.make_accessor(v.data_key, v.name, many=True, filter=v.filter))
 
-    def deserialize(self, obj) -> "Dict":
-        objs = super().deserialize(obj)
-        return self.lists_to_records(objs)
-    
-    def lists_to_records(self, obj):
-        keys = tuple(obj.keys())
-        values = tuple(obj.values())
-        return [dict(zip(keys, v)) for v in zip(*values)]
+    def load(self, obj):
+        pre_obj = self.pre_load(obj)
+        plucked_obj = self.get_obj(pre_obj)
+        converted_objs = self.convert_input(plucked_obj)
+        loaded_obj = [self.deserialize(o) for o in converted_objs]
+        return [self.post_load(o) for o in loaded_obj]
+
+    def convert_input(self, obj):
+        lists = [v(obj) for v in self.zip_accessors]
+        return list(dict(zip(self.zip_keys, o)) for o in itertools.zip_longest(*lists, fillvalue=None))
+
+
 
 # Aliases
 Str = String

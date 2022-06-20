@@ -18,11 +18,11 @@ class XPathAccessor(DefaultAccessor):
 
 
 class XmlMixin(object):
-    def make_accessor(self):
+    def make_accessor(self, data_key, name, many, filter):
         namespaces = getattr(self.Meta, "namespaces", dict())
-        if self.data_key is None:
+        if data_key is None:
             return do_nothing
-        return XPathAccessor(self.data_key, many=self.many, filter=self.filter, namespaces=namespaces)
+        return XPathAccessor(data_key, many=many, filter=filter, namespaces=namespaces)
 
     def to_string(self, elem):
         if isinstance(elem, str):

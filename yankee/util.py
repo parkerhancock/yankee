@@ -60,3 +60,7 @@ class AttrDict(dict):
             return list(cls.convert(i) for i in obj)
         else:
             return obj
+
+def update_class(orig, update):
+    for k in filter(lambda k: not k.startswith("_"), update.__dict__.keys()):
+        setattr(orig, k, getattr(update, k))
