@@ -50,9 +50,6 @@ class Combine(JsonMixin, fields.Combine):
 class Alternative(JsonMixin, fields.Alternative):
     pass
 
-class ZipSchema(JsonMixin, fields.ZipSchema):
-    _list_field = List
-
 class DelimitedString(JsonMixin, fields.DelimitedString):
     pass
 

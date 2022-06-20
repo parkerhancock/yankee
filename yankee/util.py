@@ -1,4 +1,5 @@
 import re
+import itertools
 
 us_re_1 = re.compile(r"([A-Z]+)([A-Z][a-z])")
 us_re_2 = re.compile(r"([a-z\d])([A-Z])")
@@ -64,3 +65,8 @@ class AttrDict(dict):
 def update_class(orig, update):
     for k in filter(lambda k: not k.startswith("_"), update.__dict__.keys()):
         setattr(orig, k, getattr(update, k))
+
+def unzip_records(data):
+    keys = list(data.keys())
+    value_lists = [data[k] for k in keys]
+    return list(AttrDict(zip(keys, o)) for o in itertools.zip_longest(*value_lists, fillvalue=None))

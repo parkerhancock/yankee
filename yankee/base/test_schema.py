@@ -93,18 +93,3 @@ def test_fields_on_obj():
     assert data['sub']['string'] == "Some String Data"
     assert data['address'] == "1234 Anywhere\nAustin, TX 71234"
     assert "bad_string" not in data
-
-def test_zip_field():
-    data = {
-        "first_name": ["Parker", "Peter"],
-        "last_name": ["Hancock", "Parker"]
-    }
-    class ExampleSchema(f.ZipSchema):
-        first_name = f.Str()
-        last_name = f.Str()
-
-    result = ExampleSchema().load(data)
-    assert result[0] == {
-        "first_name": "Parker",
-        "last_name": "Hancock",
-    }

@@ -158,8 +158,6 @@ class DelimitedString(String):
         objs = (self.item_schema.load(o) for o in self.delimeter.split(obj))
         return [o for o in objs if is_valid(o)]
 
-
-
 # Schema-Like Fields
 
 class Combine(Schema):
@@ -187,37 +185,6 @@ class Alternative(Schema):
     def deserialize(self, et_elem):
         obj = super().deserialize(et_elem)
         return next((v for v in obj.values() if is_valid(v)), None)
-
-
-class ZipSchema(Schema):
-    _list_field = List
-    """Sometimes data is provided as a bunch of arrays, like:
-    {
-        "name": ["Peter", "Parker"],
-        "age": [15, 25],
-    }
-    and we want to build out complete records from this data.
-    This field performs that step:
-    """
-    def bind(self, name=None, parent=None):
-        super().bind(name, parent)
-        self.zip_keys = list()
-        self.zip_accessors = list()
-        for k, v in self.fields.items():
-            self.zip_keys.append(k)
-            self.zip_accessors.append(self.make_accessor(v.data_key, v.name, many=True, filter=v.filter))
-
-    def load(self, obj):
-        pre_obj = self.pre_load(obj)
-        plucked_obj = self.get_obj(pre_obj)
-        converted_objs = self.convert_input(plucked_obj)
-        loaded_obj = [self.deserialize(o) for o in converted_objs]
-        return [self.post_load(o) for o in loaded_obj]
-
-    def convert_input(self, obj):
-        lists = [v(obj) for v in self.zip_accessors]
-        return list(dict(zip(self.zip_keys, o)) for o in itertools.zip_longest(*lists, fillvalue=None))
-
 
 
 # Aliases

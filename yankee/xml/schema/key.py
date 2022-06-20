@@ -10,6 +10,8 @@ class XPathAccessor(DefaultAccessor):
         super().__init__(*args, **kwargs)
 
     def make_path_obj(self):
+        if self.data_key is None:
+            return do_nothing
         if not self.many and not self.filter:
             xpath = f"({self.data_key})[1]"
         else:
@@ -20,7 +22,7 @@ class XPathAccessor(DefaultAccessor):
 class XmlMixin(object):
     def make_accessor(self, data_key, name, many, filter):
         namespaces = getattr(self.Meta, "namespaces", dict())
-        if data_key is None:
+        if data_key is None and filter is None:
             return do_nothing
         return XPathAccessor(data_key, many=many, filter=filter, namespaces=namespaces)
 

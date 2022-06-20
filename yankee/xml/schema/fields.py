@@ -49,27 +49,8 @@ class Dict(XmlMixin, fields.Dict):
 class Combine(XmlMixin, fields.Combine):
     pass
 
-
 class Alternative(XmlMixin, fields.Alternative):
     pass
-
-
-class ZipSchema(XmlMixin, fields.ZipSchema):
-    _list_field = List
-
-    def convert_input(self, obj):
-        objs = super().convert_input(obj)
-        objs = [self.dict_to_el(d) for d in objs]
-        return objs
-
-    def dict_to_el(self, dictionary):
-        el = ET.Element("item")
-        for k, v in dictionary.items():
-            if v is None:
-                continue
-            subel = ET.SubElement(el, k)
-            subel.append(v)
-        return el
 
 class DelimitedString(XmlMixin, fields.DelimitedString):
     pass
