@@ -31,8 +31,10 @@ class DefaultAccessor():
     def make_path_obj(self):
         return JsonPath(self.data_key) if self.data_key is not None else do_nothing
 
-    def __call__(self, *args, **kwargs):
-        result = self.path_obj(*args, **kwargs)
+    def __call__(self, obj, *args, **kwargs):
+        if obj is None:
+            return None
+        result = self.path_obj(obj, *args, **kwargs)
         result = self.apply_filter(result)
         if not self.many and isinstance(result, list):
             if len(result) == 1:

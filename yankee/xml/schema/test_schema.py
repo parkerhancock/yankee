@@ -161,3 +161,17 @@ def test_ns_fields():
     assert data["date_time"] == datetime.datetime(2021, 5, 4, 12, 5)
     assert data["date"] == datetime.date(2021, 5, 4)
     assert data["booleans"] == [True, True, False, False]
+
+def test_missing_field():
+    doc = b"""<doc><name><first_name>Parker</first_name></name></doc>"""
+    tree = ET.fromstring(doc)
+
+    class NameSchema(Schema):
+        first_name = f.Str("./first_name")
+        last_name = f.Str("./last_name")
+
+    class ExampleSchema(Schema):
+        name = NameSchema("./name_1")
+
+    result = ExampleSchema().load(tree)
+    assert result == dict()
