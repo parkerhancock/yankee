@@ -3,7 +3,7 @@ import itertools
 
 us_re_1 = re.compile(r"([A-Z]+)([A-Z][a-z])")
 us_re_2 = re.compile(r"([a-z\d])([A-Z])")
-us_re_3 = re.compile(r"([^\d])(\d+)")
+us_re_3 = re.compile(r"([^\d_])(\d+)")
 
 
 def underscore(word: str) -> str:
