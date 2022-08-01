@@ -1,4 +1,4 @@
-from yankee.util import do_nothing, update_class
+from yankee.util import do_nothing, update_class, is_valid
 from collections.abc import Mapping, Sequence
 
 
@@ -41,6 +41,8 @@ class DefaultAccessor():
                 result = result[0]
             elif len(result) == 0:
                 result = None
+        elif self.many and result is None:
+            result = list()
         return self.raise_exceptions(result)
         
     def apply_filter(self, result):
@@ -72,11 +74,12 @@ class Deserializer(object):
     class Meta:
         pass
 
-    def __init__(self, data_key=None, many=False, required=False, filter=None):
+    def __init__(self, data_key=None, many=False, required=False, filter=None, default=None):
         self.data_key = data_key
         self.required = required
         self.filter = filter
         self.many = many
+        self.default = default
         self.bind()
 
     def bind(self, name=None, parent=None):
@@ -97,6 +100,8 @@ class Deserializer(object):
         pre_obj = self.pre_load(obj)
         plucked_obj = self.get_obj(pre_obj)
         loaded_obj = self.deserialize(plucked_obj)
+        if not is_valid(loaded_obj) and self.default is not None:
+            loaded_obj = self.default
         return self.post_load(loaded_obj)
 
     def pre_load(self, obj):

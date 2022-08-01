@@ -66,8 +66,6 @@ class Schema(Deserializer):
             value = field.load(obj)
             # If there is no value, don't include anything in the output dictionary
             if not is_valid(value):
-                if field.required == True:
-                    return dict()
                 continue
             # If the value isn't a dict, or there's not flatten directive, add and continue
             if not isinstance(value, dict) or not getattr(field, "flatten", False):

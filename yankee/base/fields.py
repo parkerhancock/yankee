@@ -17,13 +17,14 @@ class Field(Deserializer):
     pass
 
 class String(Field):
-    def __init__(self, *args, formatter=None, **kwargs):
+    def __init__(self, *args, formatter=None, null_value=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.formatter = formatter or clean_whitespace
+        self.null_value = null_value
 
     def deserialize(self, elem) -> "Optional[str]":
         elem = super().deserialize(elem)
-        if elem is None or elem == "":
+        if elem is None or elem == "" or elem == self.null_value:
             return None
         else:
             return self.formatter(self.to_string(elem))
