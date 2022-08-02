@@ -30,7 +30,7 @@ class XmlMixin(object):
         if isinstance(elem, str):
             return elem
         try:
-            return "".join(elem.itertext())
+            return "\n".join(elem.itertext())
         except ValueError:
             # Occasionally elements won't have itertext available
             return elem.text

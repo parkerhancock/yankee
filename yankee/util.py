@@ -43,6 +43,8 @@ def is_valid(obj):
 whitespace_re = re.compile(r"\s+")
 clean_whitespace = lambda s: whitespace_re.sub(" ", s).strip().strip(",").strip()
 
+strip_lines = lambda s: "\n".join(l.strip() for l in s.split("\n"))
+
 def do_nothing(obj):
     return obj
 
