@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "yankee"
-version = "0.1.29"
+version = "0.1.30"
 description = "lightweight, simple, and fast declarative XML and JSON data extraction"
 authors = ["Parker Hancock <633163+parkerhancock@users.noreply.github.com>"]
 license = "Apache Software License 2.0"
@@ -22,6 +22,7 @@ pytest = "^7.1.2"
 keyring = "^23.5.1"
 black = "^22.3.0"
 isort = "^5.10.1"
+Sphinx = "^5.1.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

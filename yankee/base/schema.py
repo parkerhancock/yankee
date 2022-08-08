@@ -1,6 +1,6 @@
 import re
 
-from yankee.util import camelize, underscore, is_valid, AttrDict
+from yankee.util import camelize, underscore, is_valid, AttrDict, clean_whitespace
 
 from .deserializer import Deserializer
 
@@ -107,7 +107,7 @@ class RegexSchema(Schema):
     def deserialize(self, obj):
         if obj is None:
             return None
-        text = self.to_string(obj)
+        text = clean_whitespace(self.to_string(obj))
         match = self._regex.search(text)
         if match is None:
             return None

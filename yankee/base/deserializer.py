@@ -97,6 +97,7 @@ class Deserializer(object):
         return DefaultAccessor(key, many=many, filter=filter)
 
     def load(self, obj):
+        self.raw = obj
         pre_obj = self.pre_load(obj)
         plucked_obj = self.get_obj(pre_obj)
         loaded_obj = self.deserialize(plucked_obj)

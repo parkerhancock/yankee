@@ -50,7 +50,10 @@ def do_nothing(obj):
 
 class AttrDict(dict):    
     def __getattr__(self,  name):
-        return self[name]
+        try:
+            return self[name]
+        except KeyError:
+            raise AttributeError(name)
     
     def __setattr__(self, name, value):
         self[name] = value

@@ -41,3 +41,7 @@ class XmlMixin(object):
             subel = ET.SubElement(root, k)
             subel.text = v
         return root
+
+    @property
+    def raw_text(self):
+        return ET.tostring(self.raw, pretty_print=True).decode()
