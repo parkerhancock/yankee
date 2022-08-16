@@ -13,3 +13,6 @@ class PolymorphicSchema(JsonMixin, schema.PolymorphicSchema):
 
 class RegexSchema(JsonMixin, schema.RegexSchema):
     pass
+
+class ZipSchema(JsonMixin, schema.ZipSchema):
+    pass

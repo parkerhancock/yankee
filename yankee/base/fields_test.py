@@ -63,3 +63,15 @@ class TestFloat():
         field = Float()
         with pytest.raises(ValueError):
             field.load("Some text")
+
+class TestList():
+    def test(self):
+        data = [1, 2, 3]
+        field = List(item_schema=Str())
+        result = field.load(data)
+        assert result == ["1", "2", "3"]
+
+    def test_missing(self):
+        field = List(item_schema=Str())
+        result = field.load(None)
+        assert result == list()

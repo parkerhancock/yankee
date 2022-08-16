@@ -16,3 +16,6 @@ class PolymorphicSchema(XmlMixin, schema.PolymorphicSchema):
 
 class RegexSchema(XmlMixin, schema.RegexSchema):
     pass
+
+class ZipSchema(XmlMixin, schema.ZipSchema):
+    pass

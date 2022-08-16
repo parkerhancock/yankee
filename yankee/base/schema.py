@@ -1,6 +1,6 @@
 import re
 
-from yankee.util import camelize, underscore, is_valid, AttrDict, clean_whitespace
+from yankee.util import camelize, underscore, is_valid, AttrDict, clean_whitespace, unzip_records
 
 from .deserializer import Deserializer
 
@@ -116,3 +116,19 @@ class RegexSchema(Schema):
     
     def convert_groupdict(self, obj):
         return obj
+
+class ZipSchema(Schema):
+    """
+    This schema type allows fields that produce multiple values to be
+    zipped together into records.
+    """
+    def bind(self, name=None, parent=None):
+        super().bind(name, parent)
+        new_fields = dict()
+        for name, field in self.fields.items():
+            new_fields[name] = f.List(field.__class__, getattr(field.accessor, "data_key", None))
+        self.fields = new_fields
+
+    def deserialize(self, obj) -> "Dict":
+        result = unzip_records(super().deserialize(obj))
+        return result

@@ -119,6 +119,9 @@ class List(Field):
         self.item_schema.bind(None, schema)
 
     def deserialize(self, obj):
+        obj = super().deserialize(obj)
+        if not obj:
+            return list()
         obj_gen = (self.item_schema.load(i) for i in obj)
         return [o for o in obj_gen if is_valid(o)]
 
