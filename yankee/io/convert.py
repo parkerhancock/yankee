@@ -11,7 +11,7 @@ def jsonify(obj):
     elif isinstance(obj, datetime.datetime):
         return obj.isoformat()
     elif isinstance(obj, datetime.date):
-        return datetime.datetime.combine(obj, datetime.datetime.min.time())
+        return datetime.datetime.combine(obj, datetime.datetime.min.time()).isoformat()
     else:
         return obj
 

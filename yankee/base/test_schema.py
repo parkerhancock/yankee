@@ -93,3 +93,17 @@ def test_fields_on_obj():
     assert data['sub']['string'] == "Some String Data"
     assert data['address'] == "1234 Anywhere\nAustin, TX 71234"
     assert "bad_string" not in data
+
+class JsonExampleSchema(Schema):
+    class Meta:
+        output_style = "json"
+    string = f.Str()
+    date_time = f.DT()
+    date = f.Date()
+
+def test_json_output_type():
+    schema = JsonExampleSchema()
+    data = schema.load(doc2)
+    assert data['string'] == "Some String Data"
+    assert data['dateTime'] == "2021-05-04T12:05:00"
+    assert data['date'] == "2021-05-04T00:00:00"
