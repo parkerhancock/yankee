@@ -49,14 +49,22 @@ class DateTime(String):
         string = super(DateTime, self).deserialize(elem)
         if not string:
             return None
-        return self.parse_date(string)      
+        if self.Meta.output_style == "json":
+            return self.parse_date(string).isoformat()
+        else:
+            return self.parse_date(string)      
 
 
 
 class Date(DateTime):
     def deserialize(self, elem) -> "Optional[datetime.date]":
         date_time = super().deserialize(elem)
-        return date_time.date() if date_time else None
+        if date_time is None:
+            return None
+        if self.Meta.output_style == "json":
+            return date_time
+        else:
+            return date_time.date()
 
 
 class Boolean(String):
