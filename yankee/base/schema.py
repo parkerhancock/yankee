@@ -1,4 +1,5 @@
 import re
+from yankee.io.convert import jsonify, pythonify
 
 from yankee.util import camelize, underscore, is_valid, AttrDict, clean_whitespace, unzip_records
 
@@ -43,7 +44,7 @@ class Schema(Deserializer):
         fields = dict(class_fields)
         for name, field in fields.items():
             field.bind(name, self)
-        self.fields = {self.get_output_name(k): v for k, v in fields.items()}
+        self.fields = fields
 
     def get_output_name(self, name):
         output_style = getattr(self.Meta, "output_style", None)
@@ -74,6 +75,15 @@ class Schema(Deserializer):
             # Merge in flattened fields
             output.update(value)
         return output
+
+    def load(self, obj):
+        out = super().load(obj)
+        if not hasattr(self.Meta, "output_style") or self.Meta.output_style == None:
+            return out
+        elif self.Meta.output_style == "json":
+            return jsonify(out)
+        elif self.Meta.output_style == "python":
+            return pythonify(out)
 
 
 class PolymorphicSchema(Schema):

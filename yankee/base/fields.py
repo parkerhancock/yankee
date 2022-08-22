@@ -47,24 +47,14 @@ class DateTime(String):
 
     def deserialize(self, elem) -> "Optional[datetime.datetime]":
         string = super(DateTime, self).deserialize(elem)
-        if not string:
-            return None
-        if self.Meta.output_style == "json":
-            return self.parse_date(string).isoformat()
-        else:
-            return self.parse_date(string)      
+        return self.parse_date(string) if string else None
 
 
 
 class Date(DateTime):
     def deserialize(self, elem) -> "Optional[datetime.date]":
         date_time = super().deserialize(elem)
-        if date_time is None:
-            return None
-        if self.Meta.output_style == "json":
-            return date_time
-        else:
-            return date_time.date()
+        return date_time.date() if date_time else None
 
 
 class Boolean(String):
