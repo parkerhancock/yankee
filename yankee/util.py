@@ -1,5 +1,7 @@
 import re
 import itertools
+import datetime
+import ujson as json
 
 us_re_1 = re.compile(r"([A-Z]+)([A-Z][a-z])")
 us_re_2 = re.compile(r"([a-z\d])([A-Z])")
@@ -48,6 +50,11 @@ strip_lines = lambda s: "\n".join(l.strip() for l in s.split("\n"))
 def do_nothing(obj):
     return obj
 
+def date_encoder(obj):
+    if isinstance(obj, (datetime.date, datetime.datetime)):
+        return obj.isoformat()
+    raise ValueError(f"Object of type {type(obj)} is not serializable!")
+
 class AttrDict(dict):    
     def __getattr__(self,  name):
         try:
@@ -66,6 +73,9 @@ class AttrDict(dict):
             return list(cls.convert(i) for i in obj)
         else:
             return obj
+
+    def to_json(self, *args, **kwargs):
+        return json.dumps(self, *args, default=date_encoder, **kwargs)
 
 def update_class(orig, update):
     for k in filter(lambda k: not k.startswith("_"), update.__dict__.keys()):

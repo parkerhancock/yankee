@@ -27,13 +27,7 @@ class XmlMixin(object):
         return XPathAccessor(data_key, many=many, filter=filter, namespaces=namespaces)
 
     def to_string(self, elem):
-        if isinstance(elem, str):
-            return elem
-        try:
-            return "\n".join(elem.itertext())
-        except ValueError:
-            # Occasionally elements won't have itertext available
-            return elem.text
+        return elem if isinstance(elem, str) else elem.text or ""
 
     def convert_groupdict(self, dictionary):
         root = ET.Element("root")

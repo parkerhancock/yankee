@@ -13,9 +13,9 @@ class JsonPath():
                 if isinstance(result, Sequence) and k.isdigit():
                     result = result[int(k)]
                 elif isinstance(result, Mapping):
-                    result = result[k]
+                    result = result.get(k, None)
                 else:
-                    result = getattr(result, k)
+                    result = getattr(result, k, None)
             return result
         except (AttributeError, KeyError, IndexError):
             return None
@@ -35,7 +35,6 @@ class DefaultAccessor():
         if obj is None:
             return None
         result = self.path_obj(obj, *args, **kwargs)
-        result = self.apply_filter(result)
         if not self.many and isinstance(result, list):
             if len(result) == 1:
                 result = result[0]
@@ -43,7 +42,12 @@ class DefaultAccessor():
                 result = None
         elif self.many and result is None:
             result = list()
-        return self.raise_exceptions(result)
+
+        if self.many and not isinstance(result, list):
+            raise ValueError("Expected many results, got one!")
+        elif not self.many and isinstance(result, list):
+            raise ValueError("Expected one result, got many!")
+        return result
         
     def apply_filter(self, result):
         if self.filter is None:
@@ -52,13 +56,6 @@ class DefaultAccessor():
             return [r for r in result if self.filter(r)]
         else:
             return result if self.filter(result) else None
-
-    def raise_exceptions(self, result):
-        if self.many and not isinstance(result, list):
-            raise ValueError("Expected many results, got one!")
-        elif not self.many and isinstance(result, list):
-            raise ValueError("Expected one result, got many!")
-        return result
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -98,6 +95,7 @@ class Deserializer(object):
         return DefaultAccessor(key, many=many, filter=filter)
 
     def load(self, obj):
+        #try:
         self.raw = obj
         pre_obj = self.pre_load(obj)
         plucked_obj = self.get_obj(pre_obj)
@@ -105,6 +103,8 @@ class Deserializer(object):
         if not is_valid(loaded_obj) and self.default is not None:
             loaded_obj = self.default
         return self.post_load(loaded_obj)
+        #except Exception as e:
+        #    raise e.__class__(f"Parse Error in {self.__class__} with input {obj}\n{e.args[0]}", *e.args[1:])
 
     def pre_load(self, obj):
         return obj
