@@ -55,6 +55,8 @@ class Alternative(XmlMixin, fields.Alternative):
 class DelimitedString(XmlMixin, fields.DelimitedString):
     pass
 
+class Nested(XmlMixin, fields.Nested):
+    pass
 
 # Aliases
 Str = String

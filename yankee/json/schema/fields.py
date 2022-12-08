@@ -53,6 +53,8 @@ class Alternative(JsonMixin, fields.Alternative):
 class DelimitedString(JsonMixin, fields.DelimitedString):
     pass
 
+class Nested(JsonMixin, fields.Nested):
+    pass
 
 # Aliases
 Str = String
