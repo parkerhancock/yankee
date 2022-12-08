@@ -105,25 +105,25 @@ class Const(Field):
 
 # Multiple Value Fields
     
-class Nested(Field):
-    def __init__(self, schema, data_key=None, *args, **kwargs):
+class Nested(Schema):
+    def __init__(self, schema, *args, **kwargs):
         self._schema = schema
         self._args = args
         self._kwargs = kwargs
-        super().__init__(data_key, *args, **kwargs)
 
     def bind(self, name=None, schema=None):
-        super().bind(name, schema)
         if isinstance(self._schema, str):
             *module, _schema = self._schema.split(".")
             module = ".".join(module) or schema.__module__
-            self._schema_class = getattr(importlib.import_module(module), self._schema)
-        else:
-            self._schema_class = self._schema
-        self._schema_obj = self._schema_class(*self._args, **self._kwargs)
+            schema_class = getattr(importlib.import_module(module), _schema)
+            self._schema = schema_class(*self._args, **self._kwargs)
+        self._schema.bind(name, schema)
 
     def load(self, obj):
-        return self._schema_obj.load(obj)
+        return self._schema.load(obj)
+    
+    def deserialize(self, obj):
+        return self._schema.load(obj)
 
 class List(Field):
     def __init__(self, item_schema, data_key=None, **kwargs):
