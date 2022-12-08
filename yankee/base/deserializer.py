@@ -80,7 +80,8 @@ class Deserializer(object):
         self.filter = filter
         self.many = many
         self.default = default
-        self.bind()
+        self.accessor = self.make_accessor(self.data_key, None, self.many, self.filter)
+        
 
     def bind(self, name=None, parent=None):
         self.name = name

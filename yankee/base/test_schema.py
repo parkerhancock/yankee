@@ -107,3 +107,37 @@ def test_json_output_type():
     assert data['string'] == "Some String Data"
     assert data['dateTime'] == "2021-05-04T12:05:00"
     assert data['date'] == "2021-05-04T00:00:00"
+
+class SecondSchema(Schema):
+    first_schema = f.Nested("FirstSchema")
+
+class FirstSchema(Schema):
+    string = f.Str()
+
+delayed_data_doc = {
+    "string": "Some String"
+}
+
+def test_delayed_imports():
+    schema = SecondSchema()
+    data = schema.load(delayed_data_doc)
+    assert data == {"first_schema": {"string": "Some String"}}
+
+class ListSchema(Schema):
+    l = f.List("ItemSchema")
+
+class ItemSchema(Schema):
+    i = f.Str()
+
+delayed_list_doc = {
+    "l": [
+        {"i": "string1"},
+        {"i":"string2"}
+    ]
+}
+
+def test_list_field_by_string():
+    schema = ListSchema()
+    data = schema.load(delayed_list_doc)
+    assert data == delayed_list_doc
+

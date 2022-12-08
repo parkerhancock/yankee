@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import datetime
-import itertools
 import re
-import copy
+import importlib
 
 from dateutil.parser import parse as parse_dt, isoparse
 
@@ -97,13 +96,35 @@ class Exists(Field):
 
 class Const(Field):
     def __init__(self, const, *args, **kwargs):
+        super().__init__(self, *args, **kwargs)
         self.const = const
 
     def deserialize(self, elem) -> "Any":
         return self.const
-
+    
 
 # Multiple Value Fields
+    
+class Nested(Field):
+    def __init__(self, schema, data_key=None, *args, **kwargs):
+        self._schema = schema
+        self._args = args
+        self._kwargs = kwargs
+        super().__init__(data_key, *args, **kwargs)
+
+    def bind(self, name=None, schema=None):
+        super().bind(name, schema)
+        if isinstance(self._schema, str):
+            *module, _schema = self._schema.split(".")
+            module = ".".join(module) or schema.__module__
+            self._schema_class = getattr(importlib.import_module(module), self._schema)
+        else:
+            self._schema_class = self._schema
+        self._schema_obj = self._schema_class(*self._args, **self._kwargs)
+
+    def load(self, obj):
+        return self._schema_obj.load(obj)
+
 class List(Field):
     def __init__(self, item_schema, data_key=None, **kwargs):
         kwargs['many'] = True
@@ -114,6 +135,10 @@ class List(Field):
 
     def bind(self, name=None, schema=None):
         super().bind(name, schema)
+        if isinstance(self.item_schema, str):
+            *module, _schema = self.item_schema.split(".")
+            module = ".".join(module) or schema.__module__
+            self.item_schema = getattr(importlib.import_module(module), self.item_schema)()
         self.item_schema.bind(None, schema)
 
     def deserialize(self, obj):

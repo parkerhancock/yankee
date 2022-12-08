@@ -32,6 +32,7 @@ class Schema(Deserializer):
         self.flatten = flatten
         self.prefix = prefix
         super().__init__(*args, **kwargs)
+        self.bind()
 
     def bind(self, name=None, parent=None):
         super().bind(name, parent)
