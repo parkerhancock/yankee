@@ -48,7 +48,10 @@ class DateTime(String):
         string = super(DateTime, self).deserialize(elem)
         return self.parse_date(string) if string else None
 
-
+    def post_load(self, obj):
+        if self.Meta.output_style == "json":
+            return obj.isoformat()
+        return obj
 
 class Date(DateTime):
     def deserialize(self, elem) -> "Optional[datetime.date]":
@@ -111,18 +114,22 @@ class Nested(Schema):
         self._args = args
         self._kwargs = kwargs
 
-    def bind(self, name=None, schema=None):
+    # Deserialize Methods
+    def bind(self, name=None, parent=None):
+        super().bind(name=name, parent=parent)
         if isinstance(self._schema, str):
             *module, _schema = self._schema.split(".")
-            module = ".".join(module) or schema.__module__
+            module = ".".join(module) or parent.__module__
             schema_class = getattr(importlib.import_module(module), _schema)
             self._schema = schema_class(*self._args, **self._kwargs)
-        self._schema.bind(name, schema)
+        self._schema.bind(name, parent)
+
+    def make_accessor(self, *args, **kwargs):
+        if isinstance(self._schema, str):
+            return
+        return self._schema.make_accessor(*args, **kwargs)
 
     def load(self, obj):
-        return self._schema.load(obj)
-    
-    def deserialize(self, obj):
         return self._schema.load(obj)
 
 class List(Field):
@@ -137,7 +144,12 @@ class List(Field):
         super().bind(name, schema)
         if isinstance(self.item_schema, str):
             *module, _schema = self.item_schema.split(".")
-            module = ".".join(module) or schema.__module__
+            if module:
+                module = ".".join(module)
+            elif schema is not None:
+                module = schema.__module__
+            else:
+                return
             self.item_schema = getattr(importlib.import_module(module), self.item_schema)()
         self.item_schema.bind(None, schema)
 
@@ -191,10 +203,11 @@ class Combine(Schema):
     """Can have fields like a schema that are then
     passed as an object to a combine function that
     transforms it to a single string value"""
- 
 
-    def get_output_name(self, name):
-        return name
+    def bind(self, name=None, parent=None):
+        super().bind(name, parent)
+        for field in self.fields.values():
+            field.output_name = field.name
 
     def combine_func(self, obj):
         raise NotImplementedError("Must be implemented in subclass")

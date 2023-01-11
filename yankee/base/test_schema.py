@@ -41,7 +41,7 @@ class NameSchema(f.Combine):
     part2 = f.Str()
 
     def combine_func(self, obj):
-        return f"{obj['part1']} {obj['part2']}"
+        return f"{obj.part1} {obj.part2}"
 
 class SubSchema(Schema):
     string = f.Str()
@@ -60,6 +60,7 @@ class ExampleSchema(Schema):
     sub = SubSchema(False)
     address = AddressField(False)
     bad_string = f.Str()
+
 
 
 def test_fields_on_dict():
@@ -106,10 +107,10 @@ def test_json_output_type():
     data = schema.load(doc2)
     assert data['string'] == "Some String Data"
     assert data['dateTime'] == "2021-05-04T12:05:00"
-    assert data['date'] == "2021-05-04T00:00:00"
+    assert data['date'] == "2021-05-04"
 
 class SecondSchema(Schema):
-    first_schema = f.Nested("FirstSchema")
+    first_schema = f.Nested("FirstSchema", data_key=False)
 
 class FirstSchema(Schema):
     string = f.Str()

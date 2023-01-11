@@ -1,123 +1,58 @@
-from yankee.util import do_nothing, update_class, is_valid
-from collections.abc import Mapping, Sequence
-
-
-class JsonPath():
-    def __init__(self, data_key=None):
-        self.key = data_key.split(".")
-
-    def __call__(self, obj):
-        try:
-            result = obj
-            for k in self.key:
-                if isinstance(result, Sequence) and k.isdigit():
-                    result = result[int(k)]
-                elif isinstance(result, Mapping):
-                    result = result.get(k, None)
-                else:
-                    result = getattr(result, k, None)
-            return result
-        except (AttributeError, KeyError, IndexError):
-            return None
-
-
-class DefaultAccessor():
-    def __init__(self, data_key=None, many=False, filter=None):
-        self.data_key = data_key
-        self.many = many
-        self.filter = filter
-        self.path_obj = self.make_path_obj()
-
-    def make_path_obj(self):
-        return JsonPath(self.data_key) if self.data_key is not None else do_nothing
-
-    def __call__(self, obj, *args, **kwargs):
-        if obj is None:
-            return None
-        result = self.path_obj(obj, *args, **kwargs)
-        if not self.many and isinstance(result, list):
-            if len(result) == 1:
-                result = result[0]
-            elif len(result) == 0:
-                result = None
-        elif self.many and result is None:
-            result = list()
-
-        if self.many and not isinstance(result, list):
-            raise ValueError("Expected many results, got one!")
-        elif not self.many and isinstance(result, list):
-            raise ValueError("Expected one result, got many!")
-        return result
-        
-    def apply_filter(self, result):
-        if self.filter is None:
-            return result
-        if isinstance(result, list):
-            return [r for r in result if self.filter(r)]
-        else:
-            return result if self.filter(result) else None
-
-    def __getstate__(self):
-        state = self.__dict__.copy()
-        del state['path_obj']
-        return state
-
-    def __setstate__(self, state):
-        self.__dict__.update(state)
-        self.path_obj = self.make_path_obj()
-
+from yankee.util import is_valid, inflect, update_class
+from .accessor import python_accessor
 
 class Deserializer(object):
     class Meta:
-        pass
+        accessor_function = python_accessor
+        infer_keys = True
+        output_style = "python"
 
-    def __init__(self, data_key=None, many=False, required=False, filter=None, default=None):
+    def __init__(self, data_key=None, many=False, required=False, default=None):
         self.data_key = data_key
         self.required = required
-        self.filter = filter
         self.many = many
         self.default = default
-        self.accessor = self.make_accessor(self.data_key, None, self.many, self.filter)
-        
+        self.name = None
+        self._build_meta()
+        self.bind()
 
+    def _build_meta(self):
+        for c in self.__class__.mro():
+            if not hasattr(c, "Meta"):
+                continue
+            for k in filter(lambda k: not k.startswith("_"), c.Meta.__dict__.keys()):
+                if not hasattr(self.Meta, k):
+                    setattr(self.Meta, k, getattr(c.Meta, k))
+                
     def bind(self, name=None, parent=None):
         self.name = name
         self.parent = parent
+        # Update Meta object
         if self.parent is not None:
-            update_class(self.Meta, parent.Meta)
-        self.accessor = self.make_accessor(self.data_key, self.name, self.many, self.filter)
+            self.Meta = self.parent.Meta
+        # Regenerate Accessor
+        self.make_accessor()
+        # Set Output Name
+        if self.name is not None:
+            self.output_name = inflect(self.name, style=self.Meta.output_style)
         return self
 
-    def make_accessor(self, data_key, name, many, filter):
-        if data_key == False:
-            return do_nothing
-        key = data_key or name
-        return DefaultAccessor(key, many=many, filter=filter)
+    def make_accessor(self):
+        self.accessor = self.Meta.accessor_function(self.data_key, self.name, self.many, self.Meta)
 
     def load(self, obj):
-        #try:
         self.raw = obj
         pre_obj = self.pre_load(obj)
-        plucked_obj = self.get_obj(pre_obj)
-        loaded_obj = self.deserialize(plucked_obj)
+        loaded_obj = self.deserialize(pre_obj)
         if not is_valid(loaded_obj) and self.default is not None:
             loaded_obj = self.default
         return self.post_load(loaded_obj)
-        #except Exception as e:
-        #    raise e.__class__(f"Parse Error in {self.__class__} with input {obj}\n{e.args[0]}", *e.args[1:])
 
     def pre_load(self, obj):
         return obj
     
     def deserialize(self, obj):
-        if obj is None and self.required:
-            raise ValueError(
-                f"Field {self.name} is required! Key {self.key} not found in {obj}"
-            )
-        return obj
+        return self.accessor(obj)
 
     def post_load(self, obj):
         return obj
-
-    def get_obj(self, obj):
-        return self.accessor(obj)

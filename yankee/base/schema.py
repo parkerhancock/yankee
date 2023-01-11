@@ -1,27 +1,11 @@
 import re
-from yankee.io.convert import jsonify, pythonify
 
-from yankee.util import camelize, underscore, is_valid, AttrDict, clean_whitespace, unzip_records
+from yankee.util import is_valid, AttrDict, clean_whitespace, unzip_records
 
 from .deserializer import Deserializer
 
 
-
-def inflect(string, style=None):
-    try:
-        if style is None:
-            return string
-        elif style == "json":
-            return camelize(string)
-        elif style == "python":
-            return underscore(string)
-    except Exception:
-        return None
-
 class Schema(Deserializer):
-    class Meta:
-        output_style = "python"
-
     def __init__(
         self,
         *args,
@@ -44,26 +28,15 @@ class Schema(Deserializer):
             ]
         fields = dict(class_fields)
         for name, field in fields.items():
-            field.bind(name, self)
+            if self.prefix:
+                field.bind(f"{self.name}_{name}", self)
+            else:
+                field.bind(name, self)
         self.fields = fields
-
-    def get_output_name(self, name):
-        output_style = getattr(self.Meta, "output_style", None)
-        if output_style == None:
-            return name
-        elif output_style == "json":
-            name = camelize(name)
-            if self.prefix:
-                return camelize(self.name) + name[0].upper() + name[1:]
-            return name
-        elif output_style == "python":
-            name = underscore(name)
-            if self.prefix:
-                return underscore(self.name) + "_" + name
-            return name
 
     def deserialize(self, obj) -> "Dict":
         output = AttrDict()
+        obj = self.accessor(obj)
         for key, field in self.fields.items():
             value = field.load(obj)
             # If there is no value, don't include anything in the output dictionary
@@ -71,20 +44,11 @@ class Schema(Deserializer):
                 continue
             # If the value isn't a dict, or there's not flatten directive, add and continue
             if not isinstance(value, dict) or not getattr(field, "flatten", False):
-                output[key] = value
+                output[field.output_name] = value
                 continue
             # Merge in flattened fields
             output.update(value)
         return output
-
-    def load(self, obj):
-        out = super().load(obj)
-        if not hasattr(self.Meta, "output_style") or self.Meta.output_style == None:
-            return out
-        elif self.Meta.output_style == "json":
-            return jsonify(out)
-        elif self.Meta.output_style == "python":
-            return pythonify(out)
 
 
 class PolymorphicSchema(Schema):
@@ -116,14 +80,27 @@ class RegexSchema(Schema):
         super().__init__(*args, **kwargs)
         
     def deserialize(self, obj):
+        obj = self.accessor(obj)
         if obj is None:
             return None
         text = clean_whitespace(self.to_string(obj))
         match = self._regex.search(text)
         if match is None:
             return None
-        data = self.convert_groupdict(match.groupdict())
-        return super().deserialize(data)
+        obj = self.convert_groupdict(match.groupdict())
+        output = AttrDict()
+        for key, field in self.fields.items():
+            value = field.load(obj)
+            # If there is no value, don't include anything in the output dictionary
+            if not is_valid(value):
+                continue
+            # If the value isn't a dict, or there's not flatten directive, add and continue
+            if not isinstance(value, dict) or not getattr(field, "flatten", False):
+                output[field.output_name] = value
+                continue
+            # Merge in flattened fields
+            output.update(value)
+        return output
     
     def convert_groupdict(self, obj):
         return obj
