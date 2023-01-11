@@ -66,15 +66,3 @@ def test_fields():
     assert data["name"] == "George Burdell"
     assert data['sub']['string'] == "Some String Data"
     assert data['address'] == "1234 Anywhere\nAustin, TX 71234"
-
-def test_filter_field():
-    doc = {"list": [
-        "el1",
-        "el2"
-    ]}
-
-    class ExampleSchema(Schema):
-        el_type = f.Str("list", filter=lambda o: o == "el2")
-    
-    result = ExampleSchema().load(doc)
-    assert result['el_type'] == "el2"

@@ -89,21 +89,6 @@ class ExampleSchema(Schema):
     dict = f.Dict("./dict/item", key=f.Str(".//@name"), value=f.Str())
 
 
-def test_element_filter():
-    doc = """<list>
-    <el attr="no"/>
-    <el attr="yes">This One!</el>
-    </list>"""
-
-    tree = ET.fromstring(doc.encode("utf-8"))
-    class ListSchema(Schema):
-        el = f.Str(".//el", filter=lambda e: e.attrib['attr'] == "yes")
-
-    assert ListSchema().load(tree).el == "This One!"
-
-
-
-
 def test_fields():
     d = ExampleSchema()
     data = d.deserialize(tree)

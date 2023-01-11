@@ -1,7 +1,7 @@
 from yankee.base import schema
 from yankee.base.deserializer import Deserializer
 
-from .key import XmlMixin
+from .mixin import XmlMixin
 
 class Deserializer(XmlMixin, Deserializer):
     pass

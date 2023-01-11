@@ -1,12 +1,10 @@
 from yankee.base import schema
 
-from .fields import List
-from .key import JsonMixin
+from .mixin import JsonMixin
 
 
 class Schema(JsonMixin, schema.Schema):
     pass
-
 
 class PolymorphicSchema(JsonMixin, schema.PolymorphicSchema):
     pass

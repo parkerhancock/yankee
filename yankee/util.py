@@ -40,6 +40,16 @@ def is_valid(obj):
         return False
     return True
 
+def inflect(string, style=None):
+    try:
+        if style is None:
+            return string
+        elif style == "json":
+            return camelize(string)
+        elif style == "python":
+            return underscore(string)
+    except Exception:
+        return None
 
 # Cleans whitespace from text data
 whitespace_re = re.compile(r"\s+")

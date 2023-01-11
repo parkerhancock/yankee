@@ -1,7 +1,7 @@
 import lxml.etree as ET
 from yankee.base import fields
 
-from .key import XmlMixin
+from .mixin import XmlMixin
 
 
 class Field(XmlMixin, fields.Field):
