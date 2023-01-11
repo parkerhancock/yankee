@@ -1,3 +1,4 @@
+import lxml.etree as ET
 from yankee.base import schema
 from yankee.base.deserializer import Deserializer
 
@@ -7,7 +8,13 @@ class Deserializer(XmlMixin, Deserializer):
     pass
 
 class Schema(XmlMixin, schema.Schema):
-    pass
+    def load(self, obj):
+        if isinstance(obj, ET._Element):
+            return super().load(obj)
+        elif isinstance(obj, str):
+            return super().load(ET.fromstring(obj.encode()))
+        elif isinstance(obj, bytes):
+            return super().load(ET.fromstring(obj))
 
 
 class PolymorphicSchema(XmlMixin, schema.PolymorphicSchema):

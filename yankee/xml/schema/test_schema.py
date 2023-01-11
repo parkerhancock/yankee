@@ -61,7 +61,7 @@ class NameSchema(Combine):
     part2 = f.Str(".//part2")
 
     def combine_func(self, obj):
-        return f"{obj['part1']} {obj['part2']}"
+        return f"{obj.part1} {obj.part2}"
 
 class RegexExample(RegexSchema):
     a = f.Str("./a")
@@ -91,7 +91,7 @@ class ExampleSchema(Schema):
 
 def test_fields():
     d = ExampleSchema()
-    data = d.deserialize(tree)
+    data = d.load(test_doc)
     assert data["string"] == "Some String Data"
     assert data["date_time"] == datetime.datetime(2021, 5, 4, 12, 5)
     assert data["date"] == datetime.date(2021, 5, 4)
