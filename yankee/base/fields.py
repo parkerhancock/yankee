@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+import typing
 import datetime
 import re
 import importlib
@@ -16,7 +16,7 @@ from .schema import Schema
 
 
 class Field(Deserializer):
-    pass
+    output_type = typing.Any
 
 class String(Field):
     output_type = str

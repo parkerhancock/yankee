@@ -49,6 +49,7 @@ class SubSchema(Schema):
 
 class ExampleSchema(Schema):
     string = f.Str()
+    field = f.Field("string")
     date_time = f.DT()
     date = f.Date()
     booleans = f.List(f.Bool, data_key="booleans")
@@ -67,6 +68,7 @@ def test_fields_on_dict():
     schema = ExampleSchema()
     data = schema.load(doc1)
     assert data.string == "Some String Data"
+    assert data.field == "Some String Data"
     assert data.date_time == datetime.datetime(2021, 5, 4, 12, 5)
     assert data.date == datetime.date(2021, 5, 4)
     assert data.booleans == [True, True, False, False]
@@ -83,6 +85,7 @@ def test_fields_on_obj():
     schema = ExampleSchema()
     data = schema.load(doc2)
     assert data.string == "Some String Data"
+    assert data.field == "Some String Data"
     assert data.date_time == datetime.datetime(2021, 5, 4, 12, 5)
     assert data.date == datetime.date(2021, 5, 4)
     assert data.booleans == [True, True, False, False]
