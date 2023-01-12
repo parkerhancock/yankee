@@ -17,7 +17,8 @@ def json_accessor(data_key, name, many, meta):
     # Handle no data key
     if data_key is False or (data_key is None and name is None):
         return do_nothing
-    elif data_key is None:
+    # Handle implicit data keys
+    elif data_key is None and meta.infer_keys:
         data_key = camelize(name)
     key_segments = tuple(int(s) if s.isdigit() else s for s in data_key.split("."))
     def accessor_func(obj):
@@ -32,19 +33,3 @@ def json_accessor(data_key, name, many, meta):
                 result = result.get(seg, None)
         return result
     return accessor_func
-
-def json_path_accessor(data_key, name, many, meta):
-    if isinstance(data_key, str):
-        try:
-            json_path = jsonpath_ng.parse(str)
-        except jsonpath_ng.exceptions.JsonPathParserError:
-            json_path = jsonpath_ng.ext.parse(str)
-        def accessor_func(obj):
-            result = [match.value for match in json_path.find(obj)]
-            try:
-                return result if many else result[0]
-            except IndexError:
-                return None
-        return accessor_func
-    else:
-        return json_accessor(data_key, name, many, meta)

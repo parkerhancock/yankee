@@ -1,9 +1,9 @@
 import datetime
 
 import pytest
+import ujson as json
 
-from yankee.json import Schema
-from yankee.json import fields as f
+from yankee.json.schema import Schema, fields as f, JsonPath
 
 doc = {
     "string": "Some String Data",
@@ -39,6 +39,7 @@ class SubSchema(Schema):
 
 class ExampleSchema(Schema):
     string = f.Str()
+    string_path = f.Str(JsonPath("string"))
     date_time = f.DT()
     date = f.Date()
     booleans = f.List(f.Bool, data_key="booleans")
@@ -54,7 +55,8 @@ class ExampleSchema(Schema):
 
 def test_fields():
     schema = ExampleSchema()
-    data = schema.load(doc)
+    doc_str = json.dumps(doc)
+    data = schema.load(doc_str)
     assert data.string == "Some String Data"
     assert data.date_time == datetime.datetime(2021, 5, 4, 12, 5)
     assert data.date == datetime.date(2021, 5, 4)
@@ -66,3 +68,15 @@ def test_fields():
     assert data.name == "George Burdell"
     assert data.sub.string == "Some String Data"
     assert data.address == "1234 Anywhere\nAustin, TX 71234"
+
+def test_json_path():
+    doc = {'foo': [{'baz': 1}, {'baz': 2}]}
+    class PathSchema(Schema):
+        values = f.Int(JsonPath("foo[*].baz"))
+    data = PathSchema().load(doc)
+    assert data.values == 1
+
+    class PathListSchema(Schema):
+        values = f.List(f.Int, JsonPath("foo[*].baz"))
+    data = PathListSchema().load(doc)
+    assert data.values == [1, 2]

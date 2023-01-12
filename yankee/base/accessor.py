@@ -8,6 +8,8 @@ def python_accessor(data_key, name, many, meta):
     if data_key is False or (data_key is None and name is None):
         return do_nothing
     data_key = data_key or name
+    if not isinstance(data_key, str):
+        return data_key
     key_segments = tuple(int(s) if s.isdigit() else s for s in data_key.split("."))
     def accessor_func(obj):
         result = obj

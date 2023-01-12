@@ -1,5 +1,6 @@
 import lxml.etree as ET
 from yankee.base import fields
+from yankee.util import clean_whitespace
 
 from .mixin import XmlMixin
 
@@ -57,6 +58,15 @@ class DelimitedString(XmlMixin, fields.DelimitedString):
 
 class Nested(XmlMixin, fields.Nested):
     pass
+
+class TailField(fields.Field):
+    """Field to retreive tail text"""
+
+    def load(self, obj):
+        return super().load(obj)
+
+    def deserialize(self, obj):
+        return clean_whitespace(super().deserialize(obj).tail)
 
 # Aliases
 Str = String

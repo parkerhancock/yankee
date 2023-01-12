@@ -1,7 +1,7 @@
 import lxml.etree as ET
 from yankee.base.accessor import do_nothing
 
-def xml_accessor(data_key, name, many, meta):
+def html_accessor(data_key, name, many, meta):
     if isinstance(data_key, ET.XPath):
         def accessor_func(obj):
             if obj is None:

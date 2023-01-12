@@ -1,10 +1,10 @@
 import lxml.etree as ET
 
-from .accessor import xml_accessor
+from .accessor import html_accessor
 
-class XmlMixin(object):
+class HtmlMixin(object):
     class Meta:
-        accessor_function = xml_accessor
+        accessor_function = html_accessor
         infer_keys = False
 
     def to_string(self, elem):

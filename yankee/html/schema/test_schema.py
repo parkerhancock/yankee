@@ -3,12 +3,10 @@ import datetime
 import lxml.etree as ET
 import pytest
 
-from yankee.xml.schema import Schema, RegexSchema, fields as f, XPath, CSS
-
-from .fields import *
+from yankee.html.schema import Schema, RegexSchema, fields as f, XPath, CSS
 
 test_doc = """
-<testdoc>
+<html>
     <string>Some String Data</string>
     <regex>data_a;data_b</regex>
     <date_time>2021-05-04T12:05</date_time>
@@ -42,7 +40,7 @@ test_doc = """
             <name>Parker</name>
         </last_name>
     </zip>
-</testdoc>
+</html>
 """.strip()
 
 
@@ -55,7 +53,7 @@ class NameCombineSchema(f.Combine):
     def combine_func(self, obj):
         return f"{obj.first_name} {obj.last_name}"
 
-class NameSchema(Combine):
+class NameSchema(f.Combine):
     part1 = f.Str(".//part1")
     part2 = f.Str(".//part2")
 
@@ -70,22 +68,22 @@ class RegexExample(RegexSchema):
 
 
 class ExampleSchema(Schema):
-    comment = f.Str("./comment()")
-    string = f.Str("./string")
-    other_string = f.Str("./string/text()")
-    date_time = f.DT("./date_time")
-    date = f.Date("./date")
-    booleans = f.List(Bool, "./booleans/bool")
-    float = f.Float("./float")
-    int = f.Int("./int")
-    exists = f.Exists("./exists")
-    does_not_exist = f.Exists("./does_not_exist")
+    comment = f.Str(".//comment()")
+    string = f.Str(".//string")
+    other_string = f.Str(".//string/text()")
+    date_time = f.DT(".//date_time")
+    date = f.Date(".//date")
+    booleans = f.List(f.Bool, ".//booleans/bool")
+    float = f.Float(".//float")
+    int = f.Int(".//int")
+    exists = f.Exists(".//exists")
+    does_not_exist = f.Exists(".//does_not_exist")
     name = NameSchema()
-    regex = RegexExample("./regex")
-    bad_regex = RegexExample("./missing")
-    gone = f.Str("./nonexistent_path")
-    csv = f.DelimitedString(f.Str(), data_key="./csv", delimeter=",")
-    dict = f.Dict("./dict/item", key=f.Str(".//@name"), value=f.Str())
+    regex = RegexExample(".//regex")
+    bad_regex = RegexExample(".//missing")
+    gone = f.Str(".//nonexistent_path")
+    csv = f.DelimitedString(f.Str(), data_key=".//csv", delimeter=",")
+    dict = f.Dict(".//dict/item", key=f.Str(".//@name"), value=f.Str())
 
 
 def test_fields():
@@ -135,7 +133,7 @@ class NsSchema(Schema):
     string = f.Str("./h:string")
     date_time = f.DT("./h:date_time")
     date = f.Date("./h:date")
-    booleans = f.List(Bool, "./h:booleans/bool")
+    booleans = f.List(f.Bool, "./h:booleans/bool")
    
 def test_ns_fields():
     d = NsSchema()
