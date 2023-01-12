@@ -3,19 +3,23 @@ from __future__ import annotations
 import datetime
 import re
 import importlib
+import warnings
 
 from dateutil.parser import parse as parse_dt, isoparse
 
 from yankee.util import AttrDict, clean_whitespace, is_valid
+from yankee.data.collection import ListCollection
 
 from .deserializer import Deserializer
 from .schema import Schema
+
 
 
 class Field(Deserializer):
     pass
 
 class String(Field):
+    output_type = str
     def __init__(self, *args, formatter=None, null_value=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.formatter = formatter or clean_whitespace
@@ -33,6 +37,7 @@ class String(Field):
 
 
 class DateTime(String):
+    output_type = datetime.datetime
     def __init__(self, *args, dt_format=None, **kwargs):
         super().__init__(*args, **kwargs)
         if dt_format:
@@ -54,12 +59,14 @@ class DateTime(String):
         return obj
 
 class Date(DateTime):
+    output_type = datetime.date
     def deserialize(self, elem) -> "Optional[datetime.date]":
         date_time = super().deserialize(elem)
         return date_time.date() if date_time else None
 
 
 class Boolean(String):
+    output_type = bool
     def __init__(
         self, *args, true_value="true", case_sensitive=False, allow_none=True, **kwargs
     ):
@@ -80,27 +87,33 @@ class Boolean(String):
 
 
 class Float(String):
+    output_type = float
     def deserialize(self, elem) -> "Optional[float]":
         string = super(Float, self).deserialize(elem)
         return float(string) if string is not None else None
 
 
 class Integer(String):
+    output_type = int
     def deserialize(self, elem) -> "Optional[int]":
         string = super(Integer, self).deserialize(elem)
         return int(string) if string is not None else None
 
 
 class Exists(Field):
+    output_type = bool
     def deserialize(self, elem) -> bool:
         obj = super(Exists, self).deserialize(elem)
         return obj is not None
 
 
 class Const(Field):
-    def __init__(self, const, *args, **kwargs):
+    def __init__(self, const, output_type=None, *args, **kwargs):
         super().__init__(self, *args, **kwargs)
         self.const = const
+        if output_type is None:
+            warnings.warn(f"Constant has unassigned output type - cannot infer output schema without constant type information")
+        self.output_type = output_type
 
     def deserialize(self, elem) -> "Any":
         return self.const
@@ -109,6 +122,7 @@ class Const(Field):
 # Multiple Value Fields
     
 class Nested(Schema):
+    output_type = dict
     def __init__(self, schema, *args, **kwargs):
         self._schema = schema
         self._args = args
@@ -133,6 +147,7 @@ class Nested(Schema):
         return self._schema.load(obj)
 
 class List(Field):
+    output_type = list
     def __init__(self, item_schema, data_key=None, **kwargs):
         kwargs['many'] = True
         self.item_schema = item_schema
@@ -158,9 +173,10 @@ class List(Field):
         if not obj:
             return list()
         obj_gen = (self.item_schema.load(i) for i in obj)
-        return [o for o in obj_gen if is_valid(o)]
+        return ListCollection(o for o in obj_gen if is_valid(o))
 
 class Dictionary(List):
+    output_type = dict
     """Converts a list of items into a dictionary based on
     the key and value fields passed to it.
     """
@@ -177,6 +193,7 @@ class Dictionary(List):
 # String Parsing Fields
 
 class DelimitedString(String):
+    output_type = list
     def __init__(self, item_schema, data_key=None, delimeter=",", **kwargs):
         self.item_schema = item_schema
         if not isinstance(delimeter, re.Pattern):
@@ -203,11 +220,13 @@ class Combine(Schema):
     """Can have fields like a schema that are then
     passed as an object to a combine function that
     transforms it to a single string value"""
+    output_type = str
 
     def bind(self, name=None, parent=None):
         super().bind(name, parent)
         for field in self.fields.values():
             field.output_name = field.name
+        self.__model__ = self.make_dataclass()
 
     def combine_func(self, obj):
         raise NotImplementedError("Must be implemented in subclass")

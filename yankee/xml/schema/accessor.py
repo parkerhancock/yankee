@@ -13,6 +13,8 @@ def xpath_accessor(data_key, name, many, meta):
         xpath = ET.XPath(f"({data_key})[1]", namespaces=namespaces)
     
     def accessor_func(obj):
+        if obj is None:
+            return None
         result = xpath(obj)
         try:
             return result if many else result[0]

@@ -91,7 +91,7 @@ class ExampleSchema(Schema):
 
 def test_fields():
     d = ExampleSchema()
-    data = d.load(test_doc)
+    data = d.load(test_doc).to_dict()
     assert data["string"] == "Some String Data"
     assert data["date_time"] == datetime.datetime(2021, 5, 4, 12, 5)
     assert data["date"] == datetime.date(2021, 5, 4)
@@ -103,14 +103,13 @@ def test_fields():
     assert data["name"] == "George Burdell"
     assert data['regex']['a'] == 'data_a'
     assert data['regex']['b'] == 'data_b'
-    assert 'gone' not in data
+    assert "gone" not in data
     assert data['csv'] == ['name1', 'name2', 'name3']
     assert data['dict'] == {
         "key1": "value1",
         "key2": "value2",
     }
     assert data['comment'] == "A Comment"
-    assert data.string == "Some String Data"
 
 ns_test_doc = """
 <?xml version='1.0' encoding='UTF-8'?>
@@ -141,7 +140,7 @@ class NsSchema(Schema):
    
 def test_ns_fields():
     d = NsSchema()
-    data = d.load(ns_tree)
+    data = d.load(ns_tree).to_dict()
     assert data["string"] == "Some String Data"
     assert data["date_time"] == datetime.datetime(2021, 5, 4, 12, 5)
     assert data["date"] == datetime.date(2021, 5, 4)
@@ -158,5 +157,5 @@ def test_missing_field():
     class ExampleSchema(Schema):
         name = NameSchema("./name_1")
 
-    result = ExampleSchema().load(tree)
+    result = ExampleSchema().load(tree).to_dict()
     assert result == dict()

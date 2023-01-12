@@ -66,34 +66,34 @@ class ExampleSchema(Schema):
 def test_fields_on_dict():
     schema = ExampleSchema()
     data = schema.load(doc1)
-    assert data["string"] == "Some String Data"
-    assert data["date_time"] == datetime.datetime(2021, 5, 4, 12, 5)
-    assert data["date"] == datetime.date(2021, 5, 4)
-    assert data["booleans"] == [True, True, False, False]
-    assert data["float"] - 1.234 < 0.001
-    assert data["int"] == 23
-    assert data["exists"] == True
-    assert data["does_not_exist"] == False
-    assert data["name"] == "George Burdell"
-    assert data['sub']['string'] == "Some String Data"
-    assert data['address'] == "1234 Anywhere\nAustin, TX 71234"
-    assert "bad_string" not in data
+    assert data.string == "Some String Data"
+    assert data.date_time == datetime.datetime(2021, 5, 4, 12, 5)
+    assert data.date == datetime.date(2021, 5, 4)
+    assert data.booleans == [True, True, False, False]
+    assert data.float - 1.234 < 0.001
+    assert data.int == 23
+    assert data.exists == True
+    assert data.does_not_exist == False
+    assert data.name == "George Burdell"
+    assert data.sub.string == "Some String Data"
+    assert data.address == "1234 Anywhere\nAustin, TX 71234"
+    assert data.bad_string == None
 
 def test_fields_on_obj():
     schema = ExampleSchema()
     data = schema.load(doc2)
-    assert data["string"] == "Some String Data"
-    assert data["date_time"] == datetime.datetime(2021, 5, 4, 12, 5)
-    assert data["date"] == datetime.date(2021, 5, 4)
-    assert data["booleans"] == [True, True, False, False]
-    assert data["float"] - 1.234 < 0.001
-    assert data["int"] == 23
-    assert data["exists"] == True
-    assert data["does_not_exist"] == False
-    assert data["name"] == "George Burdell"
-    assert data['sub']['string'] == "Some String Data"
-    assert data['address'] == "1234 Anywhere\nAustin, TX 71234"
-    assert "bad_string" not in data
+    assert data.string == "Some String Data"
+    assert data.date_time == datetime.datetime(2021, 5, 4, 12, 5)
+    assert data.date == datetime.date(2021, 5, 4)
+    assert data.booleans == [True, True, False, False]
+    assert data.float - 1.234 < 0.001
+    assert data.int == 23
+    assert data.exists == True
+    assert data.does_not_exist == False
+    assert data.name == "George Burdell"
+    assert data.sub.string == "Some String Data"
+    assert data.address == "1234 Anywhere\nAustin, TX 71234"
+    assert data.bad_string == None
 
 class JsonExampleSchema(Schema):
     class Meta:
@@ -105,9 +105,9 @@ class JsonExampleSchema(Schema):
 def test_json_output_type():
     schema = JsonExampleSchema()
     data = schema.load(doc2)
-    assert data['string'] == "Some String Data"
-    assert data['dateTime'] == "2021-05-04T12:05:00"
-    assert data['date'] == "2021-05-04"
+    assert data.string == "Some String Data"
+    assert data.dateTime == "2021-05-04T12:05:00"
+    assert data.date == "2021-05-04"
 
 class SecondSchema(Schema):
     first_schema = f.Nested("FirstSchema", data_key=False)
@@ -122,7 +122,7 @@ delayed_data_doc = {
 def test_delayed_imports():
     schema = SecondSchema()
     data = schema.load(delayed_data_doc)
-    assert data == {"first_schema": {"string": "Some String"}}
+    assert data.to_dict() == {"first_schema": {"string": "Some String"}}
 
 class ListSchema(Schema):
     l = f.List("ItemSchema")
@@ -140,5 +140,5 @@ delayed_list_doc = {
 def test_list_field_by_string():
     schema = ListSchema()
     data = schema.load(delayed_list_doc)
-    assert data == delayed_list_doc
+    assert data.to_dict() == delayed_list_doc
 

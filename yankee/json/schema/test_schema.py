@@ -24,14 +24,14 @@ class AddressField(f.Combine):
     addressLine2 = f.Str()
 
     def combine_func(self, obj):
-        return f"{obj['addressLine1']}\n{obj['addressLine2']}"
+        return f"{obj.addressLine1}\n{obj.addressLine2}"
 
 class NameSchema(f.Combine):
     part1 = f.Str()
     part2 = f.Str()
 
     def combine_func(self, obj):
-        return f"{obj['part1']} {obj['part2']}"
+        return f"{obj.part1} {obj.part2}"
 
 class SubSchema(Schema):
     string = f.Str()
@@ -55,14 +55,14 @@ class ExampleSchema(Schema):
 def test_fields():
     schema = ExampleSchema()
     data = schema.load(doc)
-    assert data["string"] == "Some String Data"
-    assert data["date_time"] == datetime.datetime(2021, 5, 4, 12, 5)
-    assert data["date"] == datetime.date(2021, 5, 4)
-    assert data["booleans"] == [True, True, False, False]
-    assert data["float"] - 1.234 < 0.001
-    assert data["int"] == 23
-    assert data["exists"] == True
-    assert data["does_not_exist"] == False
-    assert data["name"] == "George Burdell"
-    assert data['sub']['string'] == "Some String Data"
-    assert data['address'] == "1234 Anywhere\nAustin, TX 71234"
+    assert data.string == "Some String Data"
+    assert data.date_time == datetime.datetime(2021, 5, 4, 12, 5)
+    assert data.date == datetime.date(2021, 5, 4)
+    assert data.booleans == [True, True, False, False]
+    assert data.float - 1.234 < 0.001
+    assert data.int == 23
+    assert data.exists == True
+    assert data.does_not_exist == False
+    assert data.name == "George Burdell"
+    assert data.sub.string == "Some String Data"
+    assert data.address == "1234 Anywhere\nAustin, TX 71234"
