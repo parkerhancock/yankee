@@ -9,7 +9,7 @@ class Deserializer(XmlMixin, Deserializer):
 
 class Schema(XmlMixin, schema.Schema):
     def load(self, obj):
-        if isinstance(obj, ET._Element):
+        if isinstance(obj, (ET._Element, ET._ElementTree)):
             return super().load(obj)
         elif isinstance(obj, str):
             return super().load(ET.fromstring(obj.encode()))

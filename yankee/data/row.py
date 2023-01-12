@@ -1,14 +1,24 @@
 import ujson as json
 import datetime
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, is_dataclass, fields
+from collections import abc
 
 from .util import JsonEncoder
 from yankee.util import is_valid
 
-def convert_date(obj):
-    if isinstance(obj, datetime.date):
+def to_dict(obj, item_class=dict, collection_class=list, date_style="python"):
+    if isinstance(obj, abc.Mapping):
+        return item_class((k, to_dict(v, item_class, collection_class, date_style)) for k, v in obj.items())
+    elif is_dataclass(obj):
+        return to_dict(item_class(obj), item_class, collection_class, date_style)
+    elif isinstance(obj, abc.Iterable) and not isinstance(obj, (str, bytes)):
+        return collection_class(to_dict(i, item_class, collection_class, date_style) for i in obj)
+    elif date_style == "mongo" and isinstance(obj, datetime.date):
         return datetime.datetime.combine(obj, datetime.datetime.min.time())
-    return obj
+    elif date_style == "json" and isinstance(obj, (datetime.date, datetime.datetime)):
+        return obj.isoformat()
+    else:
+        return obj
 
 @dataclass
 class Row():
@@ -16,7 +26,7 @@ class Row():
         return asdict(self, dict_factory=lambda i: dict([(k, v) for k, v in i if is_valid(v)]))
 
     def to_mongo(self):
-        return asdict(self, dict_factory=lambda i: dict([(k, convert_date(v)) for k, v in i if is_valid(v)]))
+        return to_dict(self.to_dict, date_style="mongo")
 
     def to_pandas(self):
         """Convert object to Pandas Series"""
@@ -25,4 +35,34 @@ class Row():
         return pd.Series(self.to_dict())
 
     def to_json(self, *args, **kwargs):
-        return json.dumps(self.to_dict(), *args, cls=JsonEncoder, **kwargs)
+        return json.dumps(to_dict(self.to_dict(), date_style="json"), *args, **kwargs)
+
+    def fields(self):
+        return fields(self)
+
+    def __getitem__(self, key):
+        try:
+            return getattr(self, key)
+        except AttributeError:
+            raise KeyError(f"'{self.__class__.__name__}' object has not attribute '{key}'")
+
+    def get(self, key, default):
+        try:
+            return self[key] or default
+        except KeyError:
+            return default
+
+    def items(self):
+        for f in fields(self):
+            yield (f.name, getattr(self, f.name))
+
+    def values(self):
+        for f in fields(self):
+            yield getattr(self, f.name)
+    
+    def keys(self):
+        for f in fields(self):
+            yield f.name
+
+    def __bool__(self):
+        return not all(v is None for v in self.__dict__.values())

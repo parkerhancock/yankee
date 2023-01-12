@@ -145,3 +145,14 @@ def test_list_field_by_string():
     data = schema.load(delayed_list_doc)
     assert data.to_dict() == delayed_list_doc
 
+def test_loads_model():
+    from .fixtures.schema import ObjectSchema
+    from .fixtures.model import Object
+    schema = ObjectSchema()
+    assert schema.__model__ == Object
+
+def test_loads_nested_model():
+    from .fixtures.nested.schema.example import ObjectSchema
+    from .fixtures.nested.model.example import Object
+    schema = ObjectSchema()
+    assert schema.__model__ == Object

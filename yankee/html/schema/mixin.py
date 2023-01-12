@@ -1,5 +1,5 @@
 import lxml.etree as ET
-
+from yankee.util import clean_whitespace
 from .accessor import html_accessor
 
 class HtmlMixin(object):
@@ -8,7 +8,12 @@ class HtmlMixin(object):
         infer_keys = False
 
     def to_string(self, elem):
-        return elem if isinstance(elem, str) else elem.text or ""
+        if isinstance(elem, str):
+            return elem
+        elif isinstance(elem, ET._Comment):
+            return clean_whitespace(elem.text, preserve_newlines=True)
+        elif isinstance(elem, ET._Element):
+            return clean_whitespace("".join(elem.itertext()), preserve_newlines=True)
 
     def convert_groupdict(self, dictionary):
         root = ET.Element("root")

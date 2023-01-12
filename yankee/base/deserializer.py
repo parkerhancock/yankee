@@ -7,11 +7,10 @@ class Deserializer(object):
         infer_keys = True
         output_style = "python"
 
-    def __init__(self, data_key=None, many=False, required=False, default=None):
+    def __init__(self, data_key=None, many=False, required=False):
         self.data_key = data_key
         self.required = required
         self.many = many
-        self.default = default
         self.name = None
         self._build_meta()
         self.bind()
@@ -44,11 +43,13 @@ class Deserializer(object):
         self.raw = obj
         pre_obj = self.pre_load(obj)
         loaded_obj = self.deserialize(pre_obj)
-        if not is_valid(loaded_obj) and self.default is not None:
-            loaded_obj = self.default
+        loaded_obj = self.load_model(loaded_obj)
         return self.post_load(loaded_obj)
 
     def pre_load(self, obj):
+        return obj
+
+    def load_model(self, obj):
         return obj
     
     def deserialize(self, obj):

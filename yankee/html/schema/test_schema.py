@@ -148,13 +148,14 @@ def test_missing_field():
     tree = ET.fromstring(doc)
 
     class NameSchema(Schema):
-        first_name = f.Str("./first_name")
-        last_name = f.Str("./last_name")
+        first_name = f.Str(".//first_name")
+        last_name = f.Str(".//last_name")
 
     class ExampleSchema(Schema):
-        name = NameSchema("./name_1")
+        name = NameSchema(".//name_1")
 
-    result = ExampleSchema().load(tree).to_dict()
+    schema = ExampleSchema()
+    result = schema.load(tree).to_dict()
     assert result == dict()
 
 def test_literal_xpath():

@@ -12,17 +12,24 @@ from yankee.data.collection import ListCollection
 
 from .deserializer import Deserializer
 from .schema import Schema
-
+from functools import partial
 
 
 class Field(Deserializer):
     output_type = typing.Any
+    def __init__(self, *args, default=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.default = default
+    
+    def load(self, obj):
+        result = super().load(obj)
+        return result if is_valid(result) else self.default
 
 class String(Field):
     output_type = str
     def __init__(self, *args, formatter=None, null_value=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.formatter = formatter or clean_whitespace
+        self.formatter = formatter or partial(clean_whitespace, preserve_newlines=True)
         self.null_value = null_value
 
     def deserialize(self, elem) -> "Optional[str]":
@@ -30,7 +37,7 @@ class String(Field):
         if elem is None or elem == "" or elem == self.null_value:
             return None
         else:
-            return self.formatter(self.to_string(elem))
+            return self.formatter(self.to_string(elem)) if self.formatter else self.to_string(elem)
 
     def to_string(self, elem): # Abstracted out since XML requires a function call
         return str(elem)
@@ -168,10 +175,10 @@ class List(Field):
             self.item_schema = getattr(importlib.import_module(module), self.item_schema)()
         self.item_schema.bind(None, schema)
 
-    def deserialize(self, obj):
-        obj = super().deserialize(obj)
+    def load(self, obj):
+        obj = self.deserialize(obj)
         if not obj:
-            return list()
+            return ListCollection()
         obj_gen = (self.item_schema.load(i) for i in obj)
         return ListCollection(o for o in obj_gen if is_valid(o))
 
@@ -186,8 +193,10 @@ class Dictionary(List):
         self.value = value
         return super().__init__(Field(), data_key, **kwargs)
     
-    def deserialize(self, obj):
-        obj = super().deserialize(obj)
+    def load(self, obj):
+        obj = self.deserialize(obj)
+        if not obj:
+            return AttrDict()
         return AttrDict((self.key.load(i), self.value.load(i)) for i in obj)
 
 # String Parsing Fields
@@ -228,12 +237,12 @@ class Combine(Schema):
             field.output_name = field.name
         self.__model__ = self.make_dataclass()
 
+    def load(self, obj):
+        loaded_obj = super().load(obj)
+        return self.combine_func(loaded_obj)
+
     def combine_func(self, obj):
         raise NotImplementedError("Must be implemented in subclass")
-
-    def deserialize(self, raw_obj) -> "Optional[str]":
-        obj = super().deserialize(raw_obj)
-        return self.combine_func(obj)
 
 
 class Alternative(Schema):

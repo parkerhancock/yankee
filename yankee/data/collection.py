@@ -6,7 +6,7 @@ from .util import JsonEncoder
 from .row import Row
 from .util import resolve
 from .util import to_dict
-
+from .attrdict import AttrDict
 
 class Collection:
     def __init__(self, iterable):
@@ -27,12 +27,10 @@ class Collection:
         """Return a list of item objects from the Collection"""
         return ListCollection(self)
 
-    def to_records(self, item_class=None, collection_class=None):
+    def to_records(self, item_class=dict, collection_class=list):
         """Return a list of dictionaries containing item data in ordinary Python types
         Useful for ingesting into NoSQL databases
         """
-        item_class = item_class or Row
-        collection_class = collection_class or self.__class__
         return to_dict(self, item_class, collection_class)
 
     def to_mongo(self):
@@ -133,7 +131,7 @@ class ValuesCollection(Collection):
 
     def __iter__(self):
         for item in self.Collection:
-            yield Row((k, resolve(item, v)) for k, v in self.fields.items())
+            yield AttrDict((k, resolve(item, v)) for k, v in self.fields.items())
 
     def __getitem__(self, sl):
         mger = deepcopy(self)

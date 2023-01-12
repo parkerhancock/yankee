@@ -2,6 +2,7 @@ import re
 import itertools
 import datetime
 import ujson as json
+import dataclasses as dc
 
 us_re_1 = re.compile(r"([A-Z]+)([A-Z][a-z])")
 us_re_2 = re.compile(r"([a-z\d])([A-Z])")
@@ -38,6 +39,8 @@ def is_valid(obj):
         return True
     elif isinstance(obj, (dict, list, str)) and len(obj) == 0:
         return False
+    elif dc.is_dataclass(obj):
+        return bool(obj)
     return True
 
 def inflect(string, style=None):
@@ -53,7 +56,12 @@ def inflect(string, style=None):
 
 # Cleans whitespace from text data
 whitespace_re = re.compile(r"\s+")
-clean_whitespace = lambda s: whitespace_re.sub(" ", s).strip().strip(",").strip()
+
+def clean_whitespace(s, preserve_newlines=False):
+    if preserve_newlines:
+        return "\n".join(whitespace_re.sub(" ", l).strip().strip(",").strip() for l in s.split("\n")).strip()
+    else:
+        return whitespace_re.sub(" ", s).strip().strip(",").strip()
 
 strip_lines = lambda s: "\n".join(l.strip() for l in s.split("\n"))
 
