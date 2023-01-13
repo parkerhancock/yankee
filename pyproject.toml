@@ -52,7 +52,7 @@ bump2version = "^1.0.1"
 [tool.poetry.extras]
 # Documentation
 docs     = ["furo", "linkify-it-py", "myst-parser", "sphinx", "sphinx-autodoc-typehints",
-            "sphinx-automodapi", "sphinx-copybutton", "sphinx-design", "sphinx-notfound-page",
+            "sphinx-automodapi", "sphinx-design", "sphinx-notfound-page",
             "sphinxcontrib-apidoc", "sphinxext-opengraph", "sphinxcontrib-mermaid", "nbsphinx", "IPython"]
 
 [scripts]
