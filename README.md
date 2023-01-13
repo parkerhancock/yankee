@@ -46,6 +46,7 @@ from yankee.base.schema import Schema, fields as f
 ## Documentation
 
 Complete documentation is available on [Read The Docs]
+
 [Read The Docs]: https://yankee.readthedocs.io/en/latest/
 
 <!-- END-RTD-IGNORE -->
