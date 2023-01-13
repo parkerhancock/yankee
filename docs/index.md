@@ -3,7 +3,6 @@
 % You can adapt this file completely to your liking, but it should at least
 % contain the root `toctree` directive.
 (index-page)=
-# Yankee
 <!-- Include Readme contents, except for the links to readthedocs, which would be redundant here -->
 ```{include} ../README.md
 :end-before: <!-- RTD-IGNORE -->
@@ -19,6 +18,8 @@
 :maxdepth: 3
 
 motivation
+user_guide
+api
 
 ```
 

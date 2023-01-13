@@ -6,11 +6,9 @@ This section is a set of user guides on the various modules contained herein
 :maxdepth: 2
 
 user_guide/introduction
-user_guide/us_application
-user_guide/fulltext
-user_guide/assignments
-user_guide/ptab
-user_guide/epo
-user_guide/usitc
+user_guide/schemas
+user_guide/fields
+user_guide/xml_html_handling
+user_guide/json_handling
 
 ```

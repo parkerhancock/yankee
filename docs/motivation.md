@@ -1,21 +1,8 @@
 # Motivation
 
-This library was conceived as a way to standardize interfaces between
-APIs that I use on a regular basis. I found myself building custom-tailored
-client libraries for each API that required me to remember how each one
-of them worked. The solution would be to come up with a standard interface
-that was flexible enough to operate across several API types.
+I do a lot of data parsing from legal and IP related data sources. A lot of that is out of XML and JSON source files. Parsing that can get ugly fast. I needed a simple, declarative way to get that data.
 
-I realized what I loved doing was pulling data into a local database that
-I could query using SQLAlchemy, Django's ORM, or other ORM libraries. So,
-why not cut out the middle man? Build a library that looks like an ORM, but
-on the back end, is actually accessing REST API's. And the task is simplified
-by the fact that almost all patent data is read-only, so I only need to support
-read operations.
+I looked at [marshmallow], which while a great library, had two key problems (1) a lack of XML parsing support, and (2) a requirement to be able to round-trip data. I needed XML parsing, and I didn't have any need to round trip the data. So I made this. It originally lived in my [patent_client] library, but as it matured, I moved it to its own separate library for more general use
 
-So, which ORM should I copy? SQLAlchemy is popular, but I often find it too
-tedious to deal with a session object. Django's ORM isn't as full-featured,
-but it can do everything I want to, and only requires importing a single object -
-the model. So, that's when I came up with this solution:
-
-*Build API client libraries that act like Django*
+[marshmallow]: https://marshmallow.readthedocs.io/en/stable/
+[patent_client]: https://patent-client.readthedocs.io/en/latest/

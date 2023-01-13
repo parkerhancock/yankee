@@ -16,6 +16,7 @@ from functools import partial
 
 
 class Field(Deserializer):
+    """The basic field - performs no type casting"""
     output_type = typing.Any
     def __init__(self, *args, default=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -26,6 +27,14 @@ class Field(Deserializer):
         return result if is_valid(result) else self.default
 
 class String(Field):
+    """String Field
+
+    Always outputs a string value, or None
+
+    Args:
+        formatter (Callable): a callable for formatting the resulting string. Defaults to a newline-preserving whitespace cleaner
+        null_value (str): a string value to indicate that it should be None. Some data sources use a hyphen or other symbol rather than empty value
+    """
     output_type = str
     def __init__(self, *args, formatter=None, null_value=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -44,6 +53,14 @@ class String(Field):
 
 
 class DateTime(String):
+    """DateTime Field
+    
+    Always outputs a datetime.datetime value. The initial value retrieved should be a string, which is then parsed as an isoformatted date. If that parsing fails, it uses `dateutil.parser.parse` to attempt to retrieve a datetime.
+    
+    Args:
+        dt_format (callable): a custom function to parse a date, overriding the default
+
+    """
     output_type = datetime.datetime
     def __init__(self, *args, dt_format=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -66,6 +83,10 @@ class DateTime(String):
         return obj
 
 class Date(DateTime):
+    """Date Field
+
+    Always outputs a datetime.date value. Uses the same args as DateTime
+    """
     output_type = datetime.date
     def deserialize(self, elem) -> "Optional[datetime.date]":
         date_time = super().deserialize(elem)
@@ -73,6 +94,15 @@ class Date(DateTime):
 
 
 class Boolean(String):
+    """Boolean Field
+    
+    Always outputs a boolean value (True, or False)
+
+    Args:
+        true_value (str): a custom string value that should be considered truthy
+        case_sensitive (str): if a true_value is provided, whether it should be considered case sensitive
+        allow_none (str): if the data key doesn't find a match, and this is true, then it will return None rather than False
+    """
     output_type = bool
     def __init__(
         self, *args, true_value="true", case_sensitive=False, allow_none=True, **kwargs
@@ -94,6 +124,10 @@ class Boolean(String):
 
 
 class Float(String):
+    """Float Field
+
+    Always outputs a float value
+    """
     output_type = float
     def deserialize(self, elem) -> "Optional[float]":
         string = super(Float, self).deserialize(elem)
@@ -101,6 +135,10 @@ class Float(String):
 
 
 class Integer(String):
+    """Float Field
+
+    Always outputs an integer value. If the value is a float, the result will be the result of calling `int` on the value.
+    """
     output_type = int
     def deserialize(self, elem) -> "Optional[int]":
         string = super(Integer, self).deserialize(elem)
@@ -108,6 +146,10 @@ class Integer(String):
 
 
 class Exists(Field):
+    """Exists Field
+    
+    Outputs true if the data item is present, else false
+    """
     output_type = bool
     def deserialize(self, elem) -> bool:
         obj = super(Exists, self).deserialize(elem)
@@ -115,6 +157,13 @@ class Exists(Field):
 
 
 class Const(Field):
+    """Constant Field
+    
+    Always outputs the provided constant value
+
+    Args:
+        const (any): The constant value to return
+    """
     def __init__(self, const, output_type=None, *args, **kwargs):
         super().__init__(self, *args, **kwargs)
         self.const = const

@@ -47,9 +47,9 @@ extensions = [
     "sphinx.ext.ifconfig",
     "sphinx.ext.viewcode",
     "sphinx.ext.githubpages",
-    "sphinx.ext.napoleon",  # Google & NumPy Style Autodocs
     "myst_parser",  # Myst-Style Markdown parser
     "sphinxcontrib.mermaid",  # Mermaid addon for MyST
+    "sphinx.ext.napoleon",
     "nbsphinx",  # Jupyter Notebook support
     "IPython.sphinxext.ipython_console_highlighting",  # ipython3 lexer
 ]
@@ -108,7 +108,7 @@ html_static_path = [
     "_static",
 ]
 html_theme = "furo"
-html_logo = join("_static", "patent_client_compact_logo.svg")
+html_logo = join("_static", "yankee_logo.svg")
 html_theme_options = {
     #'light_logo': 'requests-cache-logo-light.webp',
     #'dark_logo': 'requests-cache-logo-dark.webp',

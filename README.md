@@ -1,3 +1,4 @@
+[![yankee_logo](https://raw.githubusercontent.com/parkerhancock/yankee/master/docs/_static/yankee_logo.svg)](https://patent-client.readthedocs.io)
 [![Documentation](https://img.shields.io/readthedocs/yankee/stable)](https://yankee.readthedocs.io/en/stable/)
 
 
