@@ -1,64 +1,61 @@
-# Yankee - Simple Declarative Data Extraction from XML and JSON
+[![Documentation](https://img.shields.io/readthedocs/yankee/stable)](https://yankee.readthedocs.io/en/stable/)
 
-This is kind of like Marshmallow, but only does deserialization. What it lacks in reversibility, it makes up for in speed. Schemas are compiled in advance allowing
-data extraction to occur very quickly.
 
-## Motivation
+[![PyPI](https://img.shields.io/pypi/v/yankee?color=blue)](https://pypi.org/project/yankee)
+[![PyPI - Python Versions](https://img.shields.io/pypi/pyversions/yankee)](https://pypi.org/project/yankee)
+[![PyPI - Downloads](https://img.shields.io/pypi/dm/yankee?color=blue)](https://pypi.org/project/yankee)
 
-I have another package called patent_client. I also do a lot with legal data, some of which is in XML, and some of which is in JSON. But there's a lot of it. And I mean *a lot*, so speed matters.
+
+# Summary
+
+Simple declarative data extraction and loading in Python, featuring:
+
+- 🍰 **Ease of use:** Data extraction is performed in a simple, declarative types.
+- ⚙ **XML / HTML / JSON Extraction:** Extraction can be performed across a wide array of structured data
+- 🐼 **Pandas Integration:** Results are easily castable to [Pandas Dataframes and Series][pandas].
+- 🚀 **Performance:** XML loading is supported by the excellent and fast [lxml] library, JSON is supported by [UltraJSON][ujson] for fast parsing, and [jsonpath_ng] for flexible data extraction.  
+
+[lxml]: https://lxml.de/
+[ujson]:https://github.com/ultrajson/ultrajson
+[jsonpath_ng]: https://github.com/h2non/jsonpath-ng
+[pandas]: https://pandas.pydata.org/pandas-docs/stable/
 
 ## Quick Start
 
-There are two main modules: `yankee.json.schema` and `yankee.xml.schema`. Those modules support defining class-style deserializers. Both start by subclassing a `Schema` class, and then defining attributes from the `fields` submodule.
-
-### JSON Deserializer Example
-
+To extract data from **XML**, use this import statement, and see the example below:
 ```python
-    from yankee.json import Schema, fields
-
-    class JsonExample(Schema):
-        name = fields.String()
-        birthday = fields.Date("birthdate")
-        deep_data = fields.Int("something.0.many.levels.deep")
-
-    obj = {
-        "name": "Johnny Appleseed",
-        "birthdate": "2000-01-01",
-        "something": [
-            {"many": {
-                "levels": {
-                    "deep": 123
-                }
-            }}
-        ]
-    }
-
-    JsonExample().deserialize(obj)
-    # Returns
-    {
-        "name": "Johnny Appleseed",
-        "birthday": datetime.date(2000, 1, 1),
-        "deep_data": 123
-    }
-
+from yankee.xml.schema import Schema, fields as f, CSSSelector
 ```
 
-For JSON, the attributes are filled by pulling values off of the JSON object. If no
-path is provided, then the attribute name is used. Otherwise, a dotted string
-can be used to pluck an item from the JSON object.
-
-### XML Deserializer Example
-
+To extract data from **JSON**, use this import statement, and see the example below:
 ```python
-    import lxml.etree as ET
-    from yankee.xml import Schema, fields
+from yankee.xml.schema import Schema, fields as f, JSONPath
+```
 
-    class XmlExample(Schema):
-        name = fields.String("./name")
-        birthday = fields.Date("./birthdate")
-        deep_data = fields.Int("./something/many/levels/deep")
+To extract data from **HTML**, use this import statement:
+```python
+from yankee.html.schema import Schema, fields as f, CSSSelector
+```
 
-    obj = ET.fromstring(b"""
+To extract data from **Python objects** (either objects or dictionaries), use this import statement:
+```python
+from yankee.base.schema import Schema, fields as f
+```
+<!-- RTD-IGNORE -->
+## Documentation
+
+Complete documentation is available on [Read The Docs]
+[Read The Docs]: https://yankee.readthedocs.io/en/latest/
+
+<!-- END-RTD-IGNORE -->
+## Examples
+
+### Extract data from XML
+
+Data extraction from XML. By default, data keys are XPath expressions, but can also be CSS selectors.
+
+Take this:
+```xml
     <xmlObject>
         <name>Johnny Appleseed</name>
         <birthdate>2000-01-01</birthdate>
@@ -70,18 +67,63 @@ can be used to pluck an item from the JSON object.
             </many>
         </something>
     </xmlObject>
-    """.strip())
-
-    XmlExample().deserialize(obj)
-    # Returns
-    {
-        "name": "Johnny Appleseed",
-        "birthday": datetime.date(2000, 1, 1),
-        "deep_data": 123
-    }
 ```
 
-For XML, the attributes are filled using XPath expressions. If no path is provided,
-then the entire object is passed to the field (no implicit paths). Any valid Xpath
-expression can be used.
+Do this:
+```python
+from yankee.xml.schema import Schema, fields as f, CSSSelector
+
+class XmlExample(Schema):
+    name = f.String("./name")
+    birthday = f.Date(CSSSelector("birthdate"))
+    deep_data = f.Int("./something/many/levels/deep")
+
+XmlExample().load(xml_doc)
+```
+
+Get this:
+```python
+{
+    "name": "Johnny Appleseed",
+    "birthday": datetime.date(2000, 1, 1),
+    "deep_data": 123
+}
+```
+
+### Extract data from JSON
+
+Data extraction from JSON. By default, data keys are implied from the field names, but can also be JSONPath expressions
+
+Take this:
+```json
+{
+        "name": "Johnny Appleseed",
+        "birthdate": "2000-01-01",
+        "something": [
+            {"many": {
+                "levels": {
+                    "deep": 123
+                }
+            }}
+        ]
+    }
+```
+Do this:
+```python
+from yankee.json.schema import Schema, fields as f
+
+class JsonExample(Schema):
+    name = f.String()
+    birthday = f.Date("birthdate")
+    deep_data = f.Int("something.0.many.levels.deep")
+```
+Get this:
+```python
+{
+    "name": "Johnny Appleseed",
+    "birthday": datetime.date(2000, 1, 1),
+    "deep_data": 123
+}
+```
+
 
