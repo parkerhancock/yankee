@@ -8,6 +8,7 @@ This section is a set of user guides on the various modules contained herein
 user_guide/introduction
 user_guide/schemas
 user_guide/fields
+user_guide/output
 user_guide/xml_html_handling
 user_guide/json_handling
 

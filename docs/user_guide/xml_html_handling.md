@@ -18,7 +18,7 @@ from yankee.html.schema import Schema, fields as f, CSSSelector
 
 ## Data Keys
 
-Because XML structures are complex, keys cannot be inferred from field names. Instead, they must be defined in one of two ways: a `XPath` object, or a `CSSSelector` object. By default, data keys passed as strings are assumed to be XPath 1.0 expressions. As an alternative, you can pass a CSSSelector object as a data key to use CSS selector expressions.
+Because XML structures are complex, keys cannot be inferred from field names. Instead, they must be defined in one of two ways: a string (which is intepreted as an XPath 1.0 expression) or a `CSS` object. By default, data keys passed as strings are assumed to be XPath 1.0 expressions. As an alternative, you can pass a CSSSelector object as a data key to use CSS selector expressions.
 
 Both are supported by [lxml]. The documentation for their input values is here:
 
