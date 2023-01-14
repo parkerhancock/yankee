@@ -3,7 +3,7 @@ import dataclasses as dc
 import importlib
 from yankee.util import is_valid, AttrDict, clean_whitespace, unzip_records
 
-from yankee.data.row import Row
+from yankee.data import Row, AttrDict
 from .deserializer import Deserializer
 from yankee.data.collection import ListCollection, Collection
 

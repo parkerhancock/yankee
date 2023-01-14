@@ -1,9 +1,9 @@
 import ujson as json
 import datetime
-from dataclasses import dataclass, asdict, is_dataclass, fields
+from dataclasses import dataclass, is_dataclass, fields
 from collections import abc
 
-from .util import JsonEncoder
+from .util import to_dict, DataConversion
 from yankee.util import is_valid
 
 def to_dict(obj, item_class=dict, collection_class=list, date_style="python"):
@@ -21,21 +21,9 @@ def to_dict(obj, item_class=dict, collection_class=list, date_style="python"):
         return obj
 
 @dataclass
-class Row():
+class Row(DataConversion):
     def to_dict(self):
-        return asdict(self, dict_factory=lambda i: dict([(k, v) for k, v in i if is_valid(v)]))
-
-    def to_mongo(self):
-        return to_dict(self.to_dict, date_style="mongo")
-
-    def to_pandas(self):
-        """Convert object to Pandas Series"""
-        import pandas as pd
-
-        return pd.Series(self.to_dict())
-
-    def to_json(self, *args, **kwargs):
-        return json.dumps(to_dict(self.to_dict(), date_style="json"), *args, **kwargs)
+        return to_dict(self)
 
     def fields(self):
         return fields(self)

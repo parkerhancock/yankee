@@ -1,4 +1,5 @@
-from yankee.util import is_valid, inflect, update_class
+from toolz.functoolz import compose
+from yankee.util import inflect
 from .accessor import python_accessor
 
 class Deserializer(object):
@@ -6,6 +7,7 @@ class Deserializer(object):
         accessor_function = python_accessor
         infer_keys = True
         output_style = "python"
+        use_model = False
 
     def __init__(self, data_key=None, many=False, required=False):
         self.data_key = data_key
@@ -34,6 +36,10 @@ class Deserializer(object):
         # Set Output Name
         if self.name is not None:
             self.output_name = inflect(self.name, style=self.Meta.output_style)
+        if self.Meta.use_model:
+            self._load_func = compose(self.post_load, self.load_model, self.deserialize, self.pre_load)
+        else:
+            self._load_func = compose(self.post_load, self.deserialize, self.pre_load)
         return self
 
     def make_accessor(self):
@@ -41,10 +47,7 @@ class Deserializer(object):
 
     def load(self, obj):
         self.raw = obj
-        pre_obj = self.pre_load(obj)
-        loaded_obj = self.deserialize(pre_obj)
-        loaded_obj = self.load_model(loaded_obj)
-        return self.post_load(loaded_obj)
+        return self._load_func(obj)
 
     def pre_load(self, obj):
         return obj

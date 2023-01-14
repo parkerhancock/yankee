@@ -143,7 +143,7 @@ html_favicon = join("_static", "favicon.ico")
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = "PatentClientdoc"
+htmlhelp_basename = "Yankeedoc"
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -169,8 +169,8 @@ latex_elements = {
 latex_documents = [
     (
         master_doc,
-        "PatentClient.tex",
-        "Patent Client Documentation",
+        "Yankee.tex",
+        "Yankee Documentation",
         "Parker Hancock",
         "manual",
     )
@@ -181,7 +181,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, "patentclient", "Patent Client Documentation", [author], 1)]
+man_pages = [(master_doc, "Yankee", "Yankee Documentation", [author], 1)]
 
 
 # -- Options for Texinfo output ----------------------------------------------
@@ -192,10 +192,10 @@ man_pages = [(master_doc, "patentclient", "Patent Client Documentation", [author
 texinfo_documents = [
     (
         master_doc,
-        "PatentClient",
-        "Patent Client Documentation",
+        "Yankee",
+        "Yankee Documentation",
         author,
-        "PatentClient",
+        "Yankee",
         "One line description of project.",
         "Miscellaneous",
     )

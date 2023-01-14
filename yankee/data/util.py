@@ -66,3 +66,19 @@ def resolve(item, key):
     except Exception as e:
         return None
     return item
+
+class DataConversion():
+    def to_mongo(self):
+        return to_dict(self, date_style="mongo")
+
+    def to_pandas(self):
+        """Convert object to Pandas Series"""
+        import pandas as pd
+
+        return pd.Series(to_dict(self))
+
+    def to_json(self, *args, **kwargs):
+        return json.dumps(to_dict(self, date_style="json"), *args, **kwargs)
+
+    def to_dict(self, item_class=dict, collection_class=list, convert_dates=False):
+        return to_dict(self, item_class=item_class, collection_class=collection_class, convert_dates=convert_dates)

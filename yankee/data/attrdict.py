@@ -1,4 +1,7 @@
-class AttrDict(dict):    
+import ujson as json
+from .util import DataConversion
+
+class AttrDict(dict, DataConversion):    
     def __getattr__(self,  name):
         try:
             return self[name]
@@ -16,6 +19,3 @@ class AttrDict(dict):
             return list(cls.convert(i) for i in obj)
         else:
             return obj
-
-    def to_json(self, *args, **kwargs):
-        return json.dumps(self, *args, default=date_encoder, **kwargs)

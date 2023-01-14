@@ -19,6 +19,7 @@ python-dateutil = "^2.8.2"
 jsonpath-ng = "^1.5.3"
 ujson = "^5.7.0"
 cssselect = "^1.2.0"
+toolz = "^0.12.0"
 
 # Documentation Dependencies
 furo                       = {optional=true, version="^2022.6"}
@@ -34,6 +35,7 @@ sphinxcontrib-apidoc       = {optional=true, version="^0.3"}
 sphinxcontrib-mermaid      = {optional=true, version="^0.7.1"}
 nbsphinx                   = {optional=true, version="^0.8.9"}
 IPython                    = {optional=true, version="^7.17.0"}
+
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.2"

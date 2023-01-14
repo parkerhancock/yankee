@@ -72,11 +72,11 @@ def test_fields():
 def test_json_path():
     doc = {'foo': [{'baz': 1}, {'baz': 2}]}
     class PathSchema(Schema):
-        values = f.Int(JsonPath("foo[*].baz"))
+        numbers = f.Int(JsonPath("foo[*].baz"))
     data = PathSchema().load(doc)
-    assert data.values == 1
+    assert data.numbers == 1
 
     class PathListSchema(Schema):
-        values = f.List(f.Int, JsonPath("foo[*].baz"))
+        numbers = f.List(f.Int, JsonPath("foo[*].baz"))
     data = PathListSchema().load(doc)
-    assert data.values == [1, 2]
+    assert data.numbers == [1, 2]

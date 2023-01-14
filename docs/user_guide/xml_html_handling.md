@@ -25,6 +25,27 @@ Both are supported by [lxml]. The documentation for their input values is here:
 - [XPath](https://lxml.de/xpathxslt.html#xpath)
 - [CSSSelector](https://lxml.de/cssselect.html#the-cssselector-class)
 
+## Namespace Handling
+
+Namespaces are a pain. But Yankee tries to make this easy. On whatever your base Schema is -- either your top-level Schema, or a parent class of that schema, you can set the special `namespaces` attribute on the `Meta` class as shown below. These prefixes will then be respected in all xpath queries used in the schema and all subschemas:
+
+```python
+from yankee.xml.schema import Schema, fields as f
+
+class NestedXmlSchema(Schema):
+    name = f.Str("./ns:name")
+
+class ExampleXMLSchema(Schema):
+    class Meta:
+        namespaces = {
+            "ns": "<url here>",
+            "ops": "http://ops.epo.org"
+        }
+    nested_xml_schema = NestedXmlSchema("./ops:nested-object")
+
+```
+This `namespaces` attribute will be handed down to any nested schemas, so it only needs to be set on the top-level object. The format for the `namespaces` attribute is the same as that for the namespaces dictionary described in the [lxml documentation for XPath](https://lxml.de/xpathxslt.html)
+
 ## Input Documents
 
 The XML/HTML modules are supported by the excellent [lxml] library. For an XML or HTML schema, the object passed to a Schemas `.load` method can be either `bytes`, `string`, or an `lxml.etree._Element` / `lxml.etree._ElementTree` object. If an `_Element` or `_ElementTree` object is provided, it is used directly. If a `str` or `bytes` object is provided, the appropriate `lxml` parser is used to parse the document - either `lxml.etree.fromstring` or `lxml.html.fromstring`.
