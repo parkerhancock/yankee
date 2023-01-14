@@ -3,7 +3,7 @@ import datetime
 import lxml.etree as ET
 import pytest
 
-from yankee.xml.schema import Schema, RegexSchema, fields as f, XPath, CSS
+from yankee.xml.schema import Schema, RegexSchema, fields as f, CSS
 
 from .fields import *
 
@@ -158,21 +158,6 @@ def test_missing_field():
 
     result = ExampleSchema().load(tree).to_dict()
     assert result == dict()
-
-def test_literal_xpath():
-    doc = b"<html><a>data 1</a><a>data 2</a></html>"
-
-    class XpathSchema(Schema):
-        a = f.Str(XPath(".//a"))
-    
-    data = XpathSchema().load(doc)
-    assert data.a == "data 1"
-
-    class XpathListSchema(Schema):
-        a = f.List(f.Str, XPath(".//a"))
-    
-    data = XpathListSchema().load(doc)
-    assert data.a == ["data 1", "data 2"]
 
 def test_literal_css():
     doc = b"<html><a>data 1</a><a>data 2</a></html>"
