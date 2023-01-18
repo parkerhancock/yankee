@@ -69,6 +69,7 @@ def resolve(item, key):
 
 class DataConversion():
     def to_mongo(self):
+        """Convert object to a Python dictionary with datetime.dates converted to datetime.datetimes for MongoDB compatibility"""
         return to_dict(self, date_style="mongo")
 
     def to_pandas(self):
@@ -78,7 +79,9 @@ class DataConversion():
         return pd.Series(to_dict(self))
 
     def to_json(self, *args, **kwargs):
+        """Convert object to a JSON string"""
         return json.dumps(to_dict(self, date_style="json"), *args, **kwargs)
 
     def to_dict(self, item_class=dict, collection_class=list, convert_dates=False):
+        """Convert object to simple Python dictionary"""
         return to_dict(self, item_class=item_class, collection_class=collection_class, convert_dates=convert_dates)

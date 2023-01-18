@@ -2,12 +2,15 @@ from toolz.functoolz import compose
 from yankee.util import inflect
 from .accessor import python_accessor
 
+class DefaultMeta:
+    accessor_function = python_accessor
+    infer_keys = True
+    output_style = "python"
+    use_model = False
+
 class Deserializer(object):
-    class Meta:
-        accessor_function = python_accessor
-        infer_keys = True
-        output_style = "python"
-        use_model = False
+    Meta = DefaultMeta
+
 
     def __init__(self, data_key=None, many=False, required=False):
         self.data_key = data_key
@@ -25,11 +28,13 @@ class Deserializer(object):
                 if not hasattr(self.Meta, k):
                     setattr(self.Meta, k, getattr(c.Meta, k))
                 
-    def bind(self, name=None, parent=None):
+    def bind(self, name=None, parent=None, meta=None):
         self.name = name
         self.parent = parent
         # Update Meta object
-        if self.parent is not None:
+        if meta:
+            self.Meta = meta
+        elif self.parent is not None:
             self.Meta = self.parent.Meta
         # Regenerate Accessor
         self.make_accessor()

@@ -1,4 +1,4 @@
-from yankee.base import fields
+from .fields import *
 from .schema import PolymorphicSchema, Schema, RegexSchema, ZipSchema
 
 try:

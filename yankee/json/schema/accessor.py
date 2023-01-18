@@ -24,11 +24,13 @@ def json_accessor(data_key, name, many, meta):
     def accessor_func(obj):
         result = obj
         for seg in key_segments:
-            if isinstance(obj, Sequence):
+            if isinstance(result, Sequence) and not isinstance(result, str):
                 try:
                     result = result[int(seg)]
                 except IndexError:
                     result = None
+            elif result is None:
+                return None
             else:
                 result = result.get(seg, None)
         return result

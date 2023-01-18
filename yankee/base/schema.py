@@ -1,10 +1,12 @@
 import re
 import dataclasses as dc
 import importlib
-from yankee.util import is_valid, AttrDict, clean_whitespace, unzip_records
+import copy
+from yankee.util import is_valid, AttrDict, clean_whitespace, unzip_records, import_class
 
 from yankee.data import Row, AttrDict
-from .deserializer import Deserializer
+from .deserializer import Deserializer, DefaultMeta
+from .accessor import python_accessor
 from yankee.data.collection import ListCollection, Collection
 
 class Schema(Deserializer):
@@ -22,17 +24,19 @@ class Schema(Deserializer):
         super().__init__(*args, **kwargs)
         self.bind()
 
-    def bind(self, name=None, parent=None):
+    def bind(self, name=None, parent=None, meta=None):
         super().bind(name, parent)
         # Make sure that fields are grabbed from superclasses as well
-        fields = self.get_fields()
-        for name, field in fields.items():
-            if self.prefix:
-                field.bind(f"{self.name}_{name}", self)
-            else:
-                field.bind(name, self)
-        self.fields = fields
+        self.fields = self.get_fields()
+        self.bind_fields()
         self.get_model()
+
+    def bind_fields(self, meta=None):
+        for name, field in self.fields.items():
+            if self.prefix:
+                field.bind(f"{self.name}_{name}", self, meta)
+            else:
+                field.bind(name, self, meta)
 
     def get_fields(self):
         class_fields = list()
@@ -52,7 +56,7 @@ class Schema(Deserializer):
         module = self.__class__.__module__.replace(".schema", ".model")
         try:
             self.__model__ = getattr(importlib.import_module(module), _model)
-        except (ImportError, AttributeError):
+        except ImportError:
             self.__model__ = self.make_dataclass()
         
 
@@ -97,11 +101,11 @@ class Schema(Deserializer):
         return dataclass
 
     def load_batch(self, objs):
-        return Collection(self.load(o) for o in objs)
+        return ListCollection(self.load(o) for o in objs)
 
 
 class PolymorphicSchema(Schema):
-    def bind(self, name=None):
+    def bind(self, name=None, parent=None, meta=None):
         super().bind(self, name)
         for schema in self.schemas:
             schema.bind(name)
@@ -150,9 +154,15 @@ class RegexSchema(Schema):
             # Merge in flattened fields
             output.update(value)
         return output
+
+    def bind_fields(self, meta=None):
+        return super().bind_fields(DefaultMeta)
     
     def convert_groupdict(self, obj):
         return obj
+
+    def to_string(self, elem):
+        return str(elem)
 
 class ZipSchema(Schema):
     """
@@ -160,18 +170,17 @@ class ZipSchema(Schema):
     zipped together into records.
     """
     def __init__(self, *args, **kwargs):
-        superclasses = type(self).mro()
-        type_class = [s for s in superclasses if issubclass(s, ZipSchema)][-2]
-        module_path = type_class.__module__.split(".")
-        module = ".".join(module_path[:-1] + ["fields",])
-        self.list_field = getattr(importlib.import_module(module), "List")
+        self.list_field = import_class(self.list_field)
         super().__init__(*args, **kwargs)
 
-    def bind(self, name=None, parent=None):
+    def bind(self, name=None, parent=None, meta=None):
         super().bind(name, parent)
         new_fields = dict()
         for name, field in self.fields.items():
-            list_field = self.list_field(field.__class__, field.data_key)
+            f_copy = copy.deepcopy(field)
+            list_field = self.list_field(f_copy, field.data_key)
+            f_copy.data_key = False
+            f_copy.make_accessor()
             list_field.output_name = field.output_name
             new_fields[name] = list_field
         self.fields = new_fields

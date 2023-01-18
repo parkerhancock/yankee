@@ -7,7 +7,7 @@ import warnings
 
 from dateutil.parser import parse as parse_dt, isoparse
 
-from yankee.util import AttrDict, clean_whitespace, is_valid
+from yankee.util import AttrDict, clean_whitespace, is_valid, import_class
 from yankee.data.collection import ListCollection
 
 from .deserializer import Deserializer
@@ -58,13 +58,15 @@ class DateTime(String):
     Always outputs a datetime.datetime value. The initial value retrieved should be a string, which is then parsed as an isoformatted date. If that parsing fails, it uses `dateutil.parser.parse` to attempt to retrieve a datetime.
     
     Args:
-        dt_format (callable): a custom function to parse a date, overriding the default
-
+        dt_format (str): a formatting string from datetime.datetime.strptime to use
+        dt_converter (callable): a custom function to parse a date, overriding the default
     """
     output_type = datetime.datetime
-    def __init__(self, *args, dt_format=None, **kwargs):
+    def __init__(self, *args, dt_format=None, dt_converter=False, **kwargs):
         super().__init__(*args, **kwargs)
-        if dt_format:
+        if dt_converter:
+            self.parse_date = dt_converter
+        elif dt_format:
             self.parse_date = lambda s: datetime.datetime.strptime(s, dt_format)
 
     def parse_date(self, text:str):
@@ -100,17 +102,19 @@ class Boolean(String):
 
     Args:
         true_value (str): a custom string value that should be considered truthy
+        true_func (Callable): a custom function that, when executed on the result, should return True or False
         case_sensitive (str): if a true_value is provided, whether it should be considered case sensitive
         allow_none (str): if the data key doesn't find a match, and this is true, then it will return None rather than False
     """
     output_type = bool
     def __init__(
-        self, *args, true_value="true", case_sensitive=False, allow_none=True, **kwargs
+        self, *args, true_value="true", true_func=None, case_sensitive=False, allow_none=True, **kwargs
     ):
         super().__init__(*args, **kwargs)
         self.true_value = true_value
         self.case_sensitive = case_sensitive
         self.allow_none = allow_none
+        self.true_func = true_func
         if not self.case_sensitive:
             self.true_value = self.true_value.lower()
 
@@ -118,6 +122,8 @@ class Boolean(String):
         string = super(Boolean, self).deserialize(elem)
         if string is None or string == '':
             return None if self.allow_none else False
+        if callable(self.true_func):
+            return self.true_func(string)
         if not self.case_sensitive:
             string = string.lower()
         return string == self.true_value
@@ -185,14 +191,14 @@ class Nested(Schema):
         self._kwargs = kwargs
 
     # Deserialize Methods
-    def bind(self, name=None, parent=None):
+    def bind(self, name=None, parent=None, meta=None):
         super().bind(name=name, parent=parent)
         if isinstance(self._schema, str):
             *module, _schema = self._schema.split(".")
             module = ".".join(module) or parent.__module__
             schema_class = getattr(importlib.import_module(module), _schema)
             self._schema = schema_class(*self._args, **self._kwargs)
-        self._schema.bind(name, parent)
+        self._schema.bind(name, parent, meta)
 
     def make_accessor(self, *args, **kwargs):
         if isinstance(self._schema, str):
@@ -211,8 +217,8 @@ class List(Field):
             self.item_schema = item_schema()
         super().__init__(data_key, **kwargs)
 
-    def bind(self, name=None, schema=None):
-        super().bind(name, schema)
+    def bind(self, name=None, schema=None, meta=None):
+        super().bind(name, schema, meta)
         if isinstance(self.item_schema, str):
             *module, _schema = self.item_schema.split(".")
             if module:
@@ -225,7 +231,7 @@ class List(Field):
         self.item_schema.bind(None, schema)
 
     def load(self, obj):
-        obj = self.deserialize(obj)
+        obj = super().load(obj)
         if not obj:
             return ListCollection()
         obj_gen = (self.item_schema.load(i) for i in obj)
@@ -261,8 +267,8 @@ class DelimitedString(String):
             self.item_schema = item_schema()
         super().__init__(data_key=data_key, **kwargs)
 
-    def bind(self, name=None, schema=None):
-        super().bind(name, schema)
+    def bind(self, name=None, schema=None, meta=None):
+        super().bind(name, schema, meta=None)
         self.item_schema.bind(None, schema)
 
     def deserialize(self, obj):
@@ -280,7 +286,7 @@ class Combine(Schema):
     transforms it to a single string value"""
     output_type = str
 
-    def bind(self, name=None, parent=None):
+    def bind(self, name=None, parent=None, meta=None):
         super().bind(name, parent)
         for field in self.fields.values():
             field.output_name = field.name

@@ -1,9 +1,15 @@
 import re
 import itertools
+import importlib
 import datetime
 import ujson as json
 import dataclasses as dc
 
+def import_class(string):
+    module, klass = string.rsplit(".", 1)
+    return getattr(importlib.import_module(module), klass)
+
+us_re_0 = re.compile(r"[^A-Za-z\d_]")
 us_re_1 = re.compile(r"([A-Z]+)([A-Z][a-z])")
 us_re_2 = re.compile(r"([a-z\d])([A-Z])")
 us_re_3 = re.compile(r"([^\d_])(\d+)")
@@ -14,6 +20,7 @@ def underscore(word: str) -> str:
     Modified version from inflection library
     that also underscores digits
     """
+    word = us_re_0.sub("_", word)
     word = us_re_1.sub(r"\1_\2", word)
     word = us_re_2.sub(r"\1_\2", word)
     word = us_re_3.sub(r"\1_\2", word)

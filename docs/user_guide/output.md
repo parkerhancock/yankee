@@ -1,18 +1,39 @@
 # Output
 
-## Default Mode - The AttrDict
+## Default Mode - The AttrDict and ListCollection
 
-By default, all schemas will produce `AttrDict` output objects. The `AttrDict` object is a subclass of `dict` with two specialized features:
+By default, all schemas will produce `AttrDict` output objects, and all groups of objects created with a `List` field will produce `ListCollection` objects.
+
+### AttrDict
+
+The `AttrDict` object is a subclass of `dict` with two specialized features:
 
 **Attribute Access to Keys:** You can use attribute access to get keys. So if you obtain a `result`, then `result["name"]` == `result.name`. This works as long as there is not an `AttrDict` method with the same name.
 
 **Data Conversion:** You can easily convert the AttrDict to other similar types as:
 
-- `AttrDict.to_dict` - Converts to a simple Python dictionary
+- `AttrDict.to_dict` - Converts to a simple Python dictionary.
 
-- `AttrDict.to_mongo` - Converts to a Mongo-compatible Python dictionary object (mostly by converting all `datetime.date` objects to `datetime.datetime` objects, since MongoDb doesn't have a Date type)
+- `AttrDict.to_mongo` - Converts to a Mongo-compatible Python dictionary object (mostly by converting all `datetime.date` objects to `datetime.datetime` objects, since MongoDb doesn't have a Date type).
 
 - `AttrDict.to_pandas` - Converts to a Pandas `Series` object.
+
+### ListCollection
+
+The `ListCollection` object is a subclass of `list` with several enhanced features:
+
+**Data Conversion:** It supports similar data conversion features:
+- `ListCollection.to_list` - Converts to a simple Python list.
+- `ListCollection.to_records` - Converts to a simple Python list, with all members converted to simple Python dicts.
+- `ListCollection.to_mongo` - Converts to a simple python list, with all members converted to simple Python dicts compatible with MongoDB (casting `datetime.date`s as `datetime.datetime`s)
+- `ListCollection.to_json` - Converts to a JSON string
+- `ListCollection.to_pandas` - Converts to a DataFrame, with each object as a row
+
+**Data Munging / Mangling:** You can also modify the data contained in the collection with the following methods:
+- `ListCollection.explode`
+- `ListCollection.unpack`
+- `ListCollection.values`
+- `ListCollection.values_list`
 
 ## Model Mode - Dataclasses and Custom Models
 
