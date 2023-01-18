@@ -4,6 +4,8 @@ from yankee.util import clean_whitespace
 from .accessor import xml_accessor
 
 class XmlMixin(object):
+    list_field = "yankee.xml.schema.fields.List"
+    
     class Meta:
         accessor_function = xml_accessor
         infer_keys = False

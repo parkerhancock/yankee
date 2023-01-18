@@ -1,12 +1,12 @@
 from toolz.functoolz import compose
 from yankee.util import inflect
+from yankee import settings
 from .accessor import python_accessor
 
 class DefaultMeta:
     accessor_function = python_accessor
     infer_keys = True
     output_style = "python"
-    use_model = False
 
 class Deserializer(object):
     Meta = DefaultMeta
@@ -41,8 +41,8 @@ class Deserializer(object):
         # Set Output Name
         if self.name is not None:
             self.output_name = inflect(self.name, style=self.Meta.output_style)
-        if self.Meta.use_model:
-            self._load_func = compose(self.post_load, self.load_model, self.deserialize, self.pre_load)
+        if settings.use_model:
+            self._load_func = compose(self.load_model, self.post_load, self.deserialize, self.pre_load)
         else:
             self._load_func = compose(self.post_load, self.deserialize, self.pre_load)
         return self

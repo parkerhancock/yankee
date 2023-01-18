@@ -51,7 +51,7 @@ class Schema(Deserializer):
         if not isinstance(self.__model__, str) and self.__model__ is not None:
             return
         # Model should be obtained from a string
-        model_str = self.__model__ or self.__class__.__name__.replace("Schema", "")
+        model_str = getattr(self, "__model_name__", False) or self.__class__.__name__.replace("Schema", "")
         *module, _model = model_str.rsplit(".", 1)
         module = self.__class__.__module__.replace(".schema", ".model")
         try:
@@ -77,10 +77,7 @@ class Schema(Deserializer):
         return output
 
     def load_model(self, obj):
-        try:
-            return self.__model__(**obj)
-        except TypeError:
-            return None
+        return self.__model__(**obj)
 
     def make_field(self, t):
         if t == list:

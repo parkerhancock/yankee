@@ -299,6 +299,9 @@ class Combine(Schema):
     def combine_func(self, obj):
         raise NotImplementedError("Must be implemented in subclass")
 
+    def get_model(self):
+        return AttrDict
+
 
 class Alternative(Schema):
     """There may be a piece of data that has different names
