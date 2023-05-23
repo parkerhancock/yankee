@@ -56,7 +56,7 @@ class Schema(Deserializer):
         module = self.__class__.__module__.replace(".schema", ".model")
         try:
             self.__model__ = getattr(importlib.import_module(module), _model)
-        except ImportError:
+        except (ImportError, AttributeError):
             self.__model__ = self.make_dataclass()
         
 
