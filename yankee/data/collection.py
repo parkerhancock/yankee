@@ -119,7 +119,7 @@ class UnpackedCollection(Collection):
     def __iter__(self):
         for row in self.iterable:
             unpack_field = {self.item_key(k): v for k, v in resolve(row, self.attribute).items()}
-            new_row = Row({**row, **unpack_field})
+            new_row = {**row, **unpack_field}
             del new_row[self.attribute]
             yield new_row
 
