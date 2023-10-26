@@ -27,12 +27,18 @@ class Row(DataConversion):
 
     def fields(self):
         return fields(self)
+    
+    def __contains__(self, key):
+        try:
+            return getattr(self, key) is not None
+        except (AttributeError, TypeError):
+            return False
 
     def __getitem__(self, key):
         try:
             return getattr(self, key)
-        except AttributeError:
-            raise KeyError(f"'{self.__class__.__name__}' object has not attribute '{key}'")
+        except (AttributeError, TypeError):
+            raise KeyError(f"'{self.__class__.__name__}' object has no attribute '{key}'")
 
     def get(self, key, default):
         try:
