@@ -7,7 +7,7 @@ from yankee.util import is_valid, AttrDict, clean_whitespace, unzip_records, imp
 from yankee.data import Row, AttrDict
 from .deserializer import Deserializer, DefaultMeta
 from .accessor import python_accessor
-from yankee.data.collection import ListCollection, Collection
+from yankee.data.collection import Collection
 
 class Schema(Deserializer):
     output_type = dict

@@ -31,6 +31,12 @@ def to_dict(obj, item_class=dict, collection_class=list, date_style="python"):
     else:
         # print("No cast - passing through")
         return obj
+    
+async def ato_dict(obj, item_class=dict, collection_class=list, date_style="python"):
+    if isinstance(obj, abc.AsyncIterable):
+        obj = [o async for o in obj]
+    return to_dict(obj, item_class, collection_class, date_style)
+
 
 def resolve_list(item, key):
     item_list = resolve(item, key)

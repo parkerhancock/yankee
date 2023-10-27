@@ -8,7 +8,6 @@ import warnings
 from dateutil.parser import parse as parse_dt, isoparse
 
 from yankee.util import AttrDict, clean_whitespace, is_valid, import_class
-from yankee.data.collection import ListCollection
 
 from .deserializer import Deserializer
 from .schema import Schema

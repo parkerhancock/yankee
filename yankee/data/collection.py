@@ -1,19 +1,40 @@
 import json
+import asyncio
 from copy import deepcopy
 from itertools import chain
 
 from .util import JsonEncoder
 from .row import Row
 from .util import resolve
-from .util import to_dict
+from .util import to_dict, ato_dict
 from .attrdict import AttrDict
 
 class Collection:
     def __init__(self, iterable):
         self.iterable = iterable
 
+    def sync_iterator(self):
+        loop = asyncio.get_event_loop()
+        agen = self.iterable.__aiter__()
+        try:
+            while True:
+                yield loop.run_until_complete(agen.__anext__())
+        except StopAsyncIteration:
+            pass
+        
     def __iter__(self):
-        return iter(self.iterable)
+        if hasattr(self.iterable, "__iter__"):
+            return self.iterable.__iter__()
+        return self.sync_iterator()
+    
+    async def async_iterator(self):
+        for item in self.iterable:
+            yield item
+    
+    def __aiter__(self):
+        if hasattr(self.iterable, "__aiter__"):
+            return self.iterable.__aiter__()
+        return self.async_iterator()
 
     def __repr__(self):
         if hasattr(self, "iterable"):
@@ -25,13 +46,20 @@ class Collection:
 
     def to_list(self):
         """Return a list of item objects from the Collection"""
-        return ListCollection(self)
+        return list(self)
+    
+    async def ato_list(self):
+        """Return a list of item objects from the Collection"""
+        return [o async for o in self]
 
     def to_records(self, item_class=dict, collection_class=list):
         """Return a list of dictionaries containing item data in ordinary Python types
         Useful for ingesting into NoSQL databases
         """
         return to_dict(self, item_class, collection_class)
+    
+    async def ato_records(self, item_class=dict, collection_class=list):
+        return await ato_dict(self, item_class, collection_class)
 
     def to_mongo(self):
         """Return a list of dictionaries containing MongoDB compatible datatypes
@@ -41,6 +69,10 @@ class Collection:
     def to_json(self, *args, **kwargs) -> str:
         """Convert objects to JSON format"""
         return json.dumps(list(self.to_records()), *args, cls=JsonEncoder, **kwargs)
+    
+    async def ato_json(self, *args, **kwargs) -> str:
+        """Convert objects to JSON format"""
+        return json.dumps(await self.ato_records(), *args, cls=JsonEncoder, **kwargs)
 
     def to_pandas(self, annotate=list()):
         """Convert Collection into a Pandas DataFrame"""
@@ -48,6 +80,21 @@ class Collection:
 
         list_of_series = list()
         for i in iter(self):
+            try:
+                series = i.to_pandas()
+            except AttributeError:
+                series = pd.Series(i)
+            for a in annotate:
+                series[a] = resolve(i, a)
+            list_of_series.append(series)
+        return pd.DataFrame(list_of_series)
+    
+    async def ato_pandas(self, annotate=list()):
+        """Convert Collection into a Pandas DataFrame"""
+        import pandas as pd
+
+        list_of_series = list()
+        async for i in self:
             try:
                 series = i.to_pandas()
             except AttributeError:
@@ -81,14 +128,6 @@ class Collection:
         If only a single field is passed, the keyword argument "flat" can be passed to return a simple list"""
         return ValuesListCollection(self, *fields, flat=flat, **kw_fields)
 
-class ListCollection(list, Collection):
-    def __getitem__(self, sl):
-        result = list(self)[sl]
-        if isinstance(sl, slice):
-            return ListCollection(result)
-        else:
-            return result
-
 class ExplodedCollection(Collection):
     def __init__(self, iterable, attribute):
         self.iterable = iterable
@@ -98,9 +137,26 @@ class ExplodedCollection(Collection):
         for row in self.iterable:
             explode_field = resolve(row, self.attribute)
             for item in explode_field:
-                new_row = row.to_dict()
+                if not isinstance(row, dict):
+                    new_row = row.to_dict()
+                else:
+                    new_row = deepcopy(row)
                 new_row[self.attribute] = item
                 yield new_row
+    
+    async def async_iterator(self):
+        async for row in self.iterable:
+            explode_field = resolve(row, self.attribute)
+            for item in explode_field:
+                if not isinstance(row, dict):
+                    new_row = row.to_dict()
+                else:
+                    new_row = deepcopy(row)
+                new_row[self.attribute] = item
+                yield new_row
+    
+    def __aiter__(self):
+        return self.async_iterator()
 
 
 class UnpackedCollection(Collection):
@@ -123,6 +179,13 @@ class UnpackedCollection(Collection):
             del new_row[self.attribute]
             yield new_row
 
+    async def __aiter__(self):
+        async for row in self.iterable:
+            unpack_field = {self.item_key(k): v for k, v in resolve(row, self.attribute).items()}
+            new_row = {**row, **unpack_field}
+            del new_row[self.attribute]
+            yield new_row
+
 
 class ValuesCollection(Collection):
     def __init__(self, Collection, *arg_fields, fields=dict(), **kw_fields):
@@ -131,6 +194,10 @@ class ValuesCollection(Collection):
 
     def __iter__(self):
         for item in self.Collection:
+            yield AttrDict((k, resolve(item, v)) for k, v in self.fields.items())
+    
+    async def __aiter__(self):
+        async for item in self.Collection:
             yield AttrDict((k, resolve(item, v)) for k, v in self.fields.items())
 
     def __getitem__(self, sl):
@@ -148,5 +215,12 @@ class ValuesListCollection(ValuesCollection):
         if self.flat and len(self.fields) > 1:
             raise ValueError("Flat only works with 1 field!")
         for row in super(ValuesListCollection, self).__iter__():
+            data = tuple(row.values())
+            yield data[0] if self.flat else data
+            
+    async def __aiter__(self):
+        if self.flat and len(self.fields) > 1:
+            raise ValueError("Flat only works with 1 field!")
+        async for row in super(ValuesListCollection, self).__aiter__():
             data = tuple(row.values())
             yield data[0] if self.flat else data
