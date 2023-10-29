@@ -128,6 +128,14 @@ class Collection:
         If only a single field is passed, the keyword argument "flat" can be passed to return a simple list"""
         return ValuesListCollection(self, *fields, flat=flat, **kw_fields)
 
+class ListCollection(list, Collection):
+    def __getitem__(self, sl):
+        result = list(self)[sl]
+        if isinstance(sl, slice):
+            return ListCollection(result)
+        else:
+            return result
+
 class ExplodedCollection(Collection):
     def __init__(self, iterable, attribute):
         self.iterable = iterable
@@ -179,36 +187,42 @@ class UnpackedCollection(Collection):
             del new_row[self.attribute]
             yield new_row
 
-    async def __aiter__(self):
+    async def async_iterator(self):
         async for row in self.iterable:
             unpack_field = {self.item_key(k): v for k, v in resolve(row, self.attribute).items()}
             new_row = {**row, **unpack_field}
             del new_row[self.attribute]
             yield new_row
 
+    def __aiter__(self):
+        return self.async_iterator()
+
 
 class ValuesCollection(Collection):
-    def __init__(self, Collection, *arg_fields, fields=dict(), **kw_fields):
-        self.Collection = Collection
+    def __init__(self, collection, *arg_fields, fields=dict(), **kw_fields):
+        self.collection = collection
         self.fields = {**{k: k for k in arg_fields}, **kw_fields, **fields}
 
     def __iter__(self):
-        for item in self.Collection:
+        for item in self.collection:
             yield AttrDict((k, resolve(item, v)) for k, v in self.fields.items())
     
-    async def __aiter__(self):
-        async for item in self.Collection:
+    async def async_iterator(self):
+        async for item in self.collection:
             yield AttrDict((k, resolve(item, v)) for k, v in self.fields.items())
+    
+    def __aiter__(self):
+       return self.async_iterator()
 
     def __getitem__(self, sl):
         mger = deepcopy(self)
-        new_mgr = mger.Collection.__getitem__(sl)
+        new_mgr = mger.collection.__getitem__(sl)
         return new_mgr
 
 
 class ValuesListCollection(ValuesCollection):
-    def __init__(self, Collections, *fields, flat=False, **kw_fields):
-        super(ValuesListCollection, self).__init__(Collections, *fields, **kw_fields)
+    def __init__(self, collections, *fields, flat=False, **kw_fields):
+        super(ValuesListCollection, self).__init__(collections, *fields, **kw_fields)
         self.flat = flat
 
     def __iter__(self):
@@ -217,10 +231,13 @@ class ValuesListCollection(ValuesCollection):
         for row in super(ValuesListCollection, self).__iter__():
             data = tuple(row.values())
             yield data[0] if self.flat else data
-            
-    async def __aiter__(self):
+    
+    async def async_iterator(self):
         if self.flat and len(self.fields) > 1:
             raise ValueError("Flat only works with 1 field!")
-        async for row in super(ValuesListCollection, self).__aiter__():
+        async for row in super(ValuesListCollection, self).async_iterator():
             data = tuple(row.values())
             yield data[0] if self.flat else data
+            
+    def __aiter__(self):
+        return self.async_iterator()

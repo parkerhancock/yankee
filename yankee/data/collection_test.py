@@ -157,9 +157,42 @@ class TestValuesAsync():
     @pytest.mark.asyncio
     async def test_can_do_basic_values(self):
         collection = Collection(values_data)
-        values = await collection.values("a", "c").ato_list()
+        values = [o async for o in collection.values("a", "c")]
         assert len(values) == 2
         assert values == [
             {"a": 1, "c": 3},
             {"a": 2, "c": 5},
+        ]
+        
+class TestValuesList():
+    def test_can_do_basic_values(self):
+        collection = Collection(values_data)
+        values = collection.values_list("a", "c").to_list()
+        assert len(values) == 2
+        assert values == [
+            (1, 3),
+            (2, 5),
+        ]
+        
+class TestValuesListAsync():
+    @pytest.mark.asyncio
+    async def test_can_do_basic_values(self):
+        collection = Collection(values_data)
+        values = [o async for o in collection.values_list("a", "c")]
+        assert len(values) == 2
+        assert values == [
+            (1, 3),
+            (2, 5),
+        ]
+    
+    @pytest.mark.asyncio
+    async def test_can_do_for_loops(self):
+        collection = Collection(values_data)
+        values = list()
+        async for o in collection.values_list("a", "c"):
+            values.append(o)
+        assert len(values) == 2
+        assert values == [
+            (1, 3),
+            (2, 5),
         ]
