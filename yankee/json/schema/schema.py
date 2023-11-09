@@ -5,12 +5,13 @@ from .fields import List
 
 class Schema(JsonMixin, schema.Schema):
     def load(self, obj):
-        if self.name is not None or isinstance(obj, dict):
+        if self.name is not None or isinstance(obj, (list, dict)):
             return super().load(obj)
         elif isinstance(obj, str):
             return super().load(json.loads(obj))
         elif isinstance(obj, bytes):
             return super().load(json.loads(obj.decode()))
+        raise ValueError(f"Cannot load {obj} as {self.__class__.__name__}")
 
     def load_batch(self, obj):
         if self.name is not None or isinstance(obj, list):
@@ -19,6 +20,7 @@ class Schema(JsonMixin, schema.Schema):
             return super().load_batch(json.loads(obj))
         elif isinstance(obj, bytes):
             return super().load_batch(json.loads(obj.decode()))
+        raise ValueError(f"Cannot load {obj} as {self.__class__.__name__}")
 
 class PolymorphicSchema(JsonMixin, schema.PolymorphicSchema):
     pass

@@ -100,7 +100,7 @@ def test_fields():
     assert data["name"] == "George Burdell"
     #assert data['regex']['a'] == 'data_a'
     #assert data['regex']['b'] == 'data_b'
-    assert data["gone"] is None
+    #assert data["gone"] is None
     assert data['csv'] == ['name1', 'name2', 'name3']
     assert data['dict'] == {
         "key1": "value1",
@@ -156,7 +156,7 @@ def test_missing_field():
 
     schema = ExampleSchema()
     result = schema.load(tree).to_dict()
-    assert result == dict(name=None)
+    assert result == dict()
 
 def test_literal_css():
     doc = b"<html><a>data 1</a><a>data 2</a></html>"

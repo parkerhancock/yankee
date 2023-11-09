@@ -3,7 +3,7 @@ import dataclasses as dc
 import importlib
 import copy
 from yankee.util import is_valid, AttrDict, clean_whitespace, unzip_records, import_class
-
+from yankee import settings
 from yankee.data import Row, AttrDict
 from .deserializer import Deserializer, DefaultMeta
 from .accessor import python_accessor
@@ -29,7 +29,6 @@ class Schema(Deserializer):
         # Make sure that fields are grabbed from superclasses as well
         self.fields = self.get_fields()
         self.bind_fields()
-        self.get_model()
 
     def bind_fields(self, meta=None):
         for name, field in self.fields.items():
@@ -56,9 +55,15 @@ class Schema(Deserializer):
         module = self.__class__.__module__.replace(".schema", ".model")
         try:
             self.__model__ = getattr(importlib.import_module(module), _model)
-        except (ImportError, AttributeError):
+        except (ImportError, AttributeError) as e:
+            if isinstance(e, AttributeError) and "circular import" in str(e):
+                raise e
             self.__model__ = self.make_dataclass()
         
+    def load(self, obj):
+        if settings.use_model:
+            self.get_model()
+        return super().load(obj)
 
     def deserialize(self, obj) -> "Dict":
         output = AttrDict()

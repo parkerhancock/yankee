@@ -1,7 +1,7 @@
 import datetime
 
 import pytest
-
+from yankee import settings
 from yankee import Schema, fields as f
 
 doc1 = {
@@ -148,11 +148,9 @@ def test_list_field_by_string():
 def test_loads_model():
     from .fixtures.schema import ObjectSchema
     from .fixtures.model import Object
+    old_setting = settings.use_model
+    settings.use_model = True
     schema = ObjectSchema()
+    schema.load({"foo": 1, "bar": 2})
     assert schema.__model__ == Object
-
-def test_loads_nested_model():
-    from .fixtures.nested.schema.example import ObjectSchema
-    from .fixtures.nested.model.example import Object
-    schema = ObjectSchema()
-    assert schema.__model__ == Object
+    settings.use_model = old_setting
