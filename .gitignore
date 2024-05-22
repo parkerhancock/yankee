@@ -77,3 +77,4 @@ sample_output/
 # VSCode
 workspace*
 .vscode/
+.python-version

@@ -14,13 +14,17 @@ classifiers =[
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.13"
-lxml = "^4.8.0"
-python-dateutil = "^2.8.2"
-jsonpath-ng = "^1.5.3"
-ujson = "^5.7.0"
+lxml = "^5.2.2"
+python-dateutil = "^2.9.0.post0"
+jsonpath-ng = "^1.6.1"
+ujson = "^5.10.0"
 cssselect = "^1.2.0"
-toolz = "^0.12.0"
+toolz = "^0.12.1"
 
+[tool.poetry.group.docs]
+optional = true
+
+[tool.poetry.group.docs.dependencies]
 # Documentation Dependencies
 furo                       = {optional=true, version="^2022.6"}
 linkify-it-py              = {optional=true, version="^2.0"}
@@ -37,12 +41,6 @@ nbsphinx                   = {optional=true, version="^0.8.9"}
 IPython                    = {optional=true, version="^7.17.0"}
 inflection = "^0.5.1"
 
-
-[tool.poetry.extras]
-# Documentation
-docs     = ["furo", "linkify-it-py", "myst-parser", "sphinx", "sphinx-autodoc-typehints",
-            "sphinx-automodapi", "sphinx-design", "sphinx-notfound-page",
-            "sphinxcontrib-apidoc", "sphinxext-opengraph", "sphinxcontrib-mermaid", "nbsphinx", "IPython"]
 
 [tool.poetry.group.dev.dependencies]
 pytest-asyncio = "^0.21.1"
